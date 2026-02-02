@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react"
-import { Navbar } from "@/components/Navbar"
 import { EventCard } from "@/components/EventCard"
 import axios from "axios"
 
@@ -40,7 +39,6 @@ export default function Events() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
       {/* Search + Filters */}
       <section className="px-8 py-6">

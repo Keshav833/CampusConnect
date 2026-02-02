@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bell, CheckCircle2, AlertTriangle, Award, MapPin, Clock } from "lucide-react"
@@ -190,7 +189,6 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}

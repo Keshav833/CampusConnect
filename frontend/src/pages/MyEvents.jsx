@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { Search, Calendar, Download, QrCode, Filter } from "lucide-react"
@@ -106,7 +105,6 @@ export default function MyEvents() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-6">My Registered Events</h1>

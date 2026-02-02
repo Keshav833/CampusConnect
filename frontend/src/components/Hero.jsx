@@ -36,7 +36,7 @@ export function Hero() {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/events">
+              <Link to="/role-selection">
                 <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-10 py-7 text-lg shadow-xl shadow-indigo-200/50 transition-all hover:scale-105 active:scale-95 group">
                   Get Started
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />

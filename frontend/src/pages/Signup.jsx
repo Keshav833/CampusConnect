@@ -1,13 +1,14 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, EyeOff, Loader2, CheckCircle2 } from "lucide-react"
+import { Eye, EyeOff, Loader2, CheckCircle2, GraduationCap, Briefcase, ArrowLeft } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function Signup() {
+  const [role, setRole] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -18,12 +19,27 @@ export default function Signup() {
     email: "",
     password: "",
     confirmPassword: "",
-    college: "",
+    organization: "",
+    orgRole: "",
+    regNo: "",
     branch: "",
     year: "",
     terms: false,
   })
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const savedRole = localStorage.getItem('userRole');
+    if (!savedRole) {
+      navigate('/role-selection');
+    } else {
+      setRole(savedRole);
+    }
+  }, [navigate]);
+
+  if (!role) return null;
+
+  const isStudent = role === 'student';
 
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, label: "", color: "" }
@@ -55,9 +71,20 @@ export default function Signup() {
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = "Passwords do not match"
     }
-    if (!formData.college) newErrors.college = "College is required"
-    if (!formData.branch) newErrors.branch = "Branch is required"
-    if (!formData.year) newErrors.year = "Year is required"
+
+    if (isStudent) {
+      if (!formData.regNo) {
+        newErrors.regNo = "Registration number is required"
+      } else if (!/^\d{8}$/.test(formData.regNo)) {
+        newErrors.regNo = "Reg. No must be exactly 8 digits"
+      }
+      if (!formData.branch) newErrors.branch = "Branch is required"
+      if (!formData.year) newErrors.year = "Year is required"
+    } else {
+      if (!formData.organization) newErrors.organization = "Organization name is required"
+      if (!formData.orgRole) newErrors.orgRole = "Your role in organization is required"
+    }
+
     if (!formData.terms) newErrors.terms = "You must accept the terms and conditions"
 
     setErrors(newErrors)
@@ -66,36 +93,53 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     if (!validateForm()) return
-
     setIsLoading(true)
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false)
-      setSuccess(true)
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...formData,
+          role: role
+        }),
+      });
 
-      // Redirect to login after 2 seconds
-      setTimeout(() => {
-        navigate("/login")
-      }, 2000)
-    }, 1500)
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess(true)
+        setTimeout(() => {
+          navigate("/login")
+        }, 2000)
+      } else {
+        setErrors({ general: data.error || "Signup failed. Please try again." });
+      }
+    } catch (err) {
+      setErrors({ general: "Unable to connect to server. Please try again." });
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-md text-center">
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-border">
-            <div className="flex justify-center mb-4">
-              <CheckCircle2 className="h-16 w-16 text-green-500" />
+          <div className="bg-white rounded-3xl shadow-2xl p-10 border border-slate-100 scale-in-center">
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center">
+                <CheckCircle2 className="h-12 w-12 text-green-500" />
+              </div>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
-            <p className="text-muted-foreground mb-4">
-              Your account has been successfully created. Redirecting to login...
+            <h2 className="text-3xl font-extrabold text-slate-900 mb-3">Account Created!</h2>
+            <p className="text-slate-500 mb-8 leading-relaxed">
+              Welcome to the community! Redirecting you to login...
             </p>
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+            <div className="flex justify-center">
+              <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+            </div>
           </div>
         </div>
       </div>
@@ -103,226 +147,243 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-blue-50 px-4 py-12">
-      <div className="w-full max-w-md">
-        {/* Logo and Title */}
-        <div className="text-center mb-8">
-          <Link to="/">
-            <h1 className="text-3xl font-bold text-indigo-600 mb-2">CampusConnect</h1>
-          </Link>
-          <p className="text-muted-foreground">Create your account to get started</p>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
+      <div className="w-full max-w-lg">
+        <button 
+          onClick={() => navigate('/auth-choice')}
+          className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition-colors mb-8 font-medium"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+
+        <div className="text-center mb-10">
+          <div className={`w-16 h-16 rounded-2xl mb-4 flex items-center justify-center mx-auto shadow-lg ${isStudent ? 'bg-indigo-600 text-white' : 'bg-sky-600 text-white'}`}>
+            {isStudent ? <GraduationCap className="w-8 h-8" /> : <Briefcase className="w-8 h-8" />}
+          </div>
+          <h1 className="text-3xl font-extrabold text-slate-900 mb-2 tracking-tight">
+            Join as <span className={isStudent ? 'text-indigo-600' : 'text-sky-600 capitalize'}>{role}</span>
+          </h1>
+          <p className="text-slate-500">Create your professional profile to get started.</p>
         </div>
 
-        {/* Signup Form */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 border border-border">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter your full name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                disabled={isLoading}
-                className={`h-11 ${errors.name ? "border-red-500" : ""}`}
-              />
-              {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
-            </div>
+        <div className="bg-white rounded-[2.5rem] shadow-xl p-8 md:p-10 border border-slate-100">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {errors.general && (
+              <div className="bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm border border-red-100">{errors.general}</div>
+            )}
 
-            {/* Email/Student ID */}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email / Student ID</Label>
-              <Input
-                id="email"
-                type="text"
-                placeholder="Enter your email or student ID"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                disabled={isLoading}
-                className={`h-11 ${errors.email ? "border-red-500" : ""}`}
-              />
-              {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
-            </div>
-
-            {/* Password */}
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Create a password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  id="name"
+                  placeholder="John Doe"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   disabled={isLoading}
-                  className={`h-11 pr-10 ${errors.password ? "border-red-500" : ""}`}
+                  className={`h-12 rounded-xl border-slate-200 focus:ring-indigo-600 ${errors.name ? "border-red-500" : ""}`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  disabled={isLoading}
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
+                {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
               </div>
-              {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
 
-              {/* Password Strength Indicator */}
-              {formData.password && (
-                <div className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Password strength:</span>
-                    <span
-                      className={`font-medium ${passwordStrength.label === "Strong" ? "text-green-600" : passwordStrength.label === "Good" ? "text-yellow-600" : "text-red-600"}`}
+              <div className="space-y-2">
+                <Label htmlFor="email">{isStudent ? 'Email' : 'Work Email'}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={isStudent ? "john@example.com" : "john@company.com"}
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  disabled={isLoading}
+                  className={`h-12 rounded-xl border-slate-200 focus:ring-indigo-600 ${errors.email ? "border-red-500" : ""}`}
+                />
+                {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
+              </div>
+            </div>
+
+            {isStudent ? (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="regNo">Registration Number (Reg. No)</Label>
+                  <Input
+                    id="regNo"
+                    placeholder="e.g. 12345678"
+                    maxLength={8}
+                    value={formData.regNo}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 8) {
+                        setFormData({ ...formData, regNo: value });
+                      }
+                    }}
+                    disabled={isLoading}
+                    className={`h-12 rounded-xl border-slate-200 focus:ring-indigo-600 ${errors.regNo ? "border-red-500" : ""}`}
+                  />
+                  {errors.regNo && <p className="text-xs text-red-500">{errors.regNo}</p>}
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Select
+                      value={formData.branch}
+                      onValueChange={(value) => setFormData({ ...formData, branch: value })}
+                      disabled={isLoading}
                     >
-                      {passwordStrength.label}
-                    </span>
+                      <SelectTrigger className={`h-12 rounded-xl border-slate-200 ${errors.branch ? "border-red-500" : ""}`}>
+                        <SelectValue placeholder="Branch" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-slate-200">
+                        <SelectItem value="cse">Computer Science</SelectItem>
+                        <SelectItem value="ece">Electronics</SelectItem>
+                        <SelectItem value="mech">Mechanical</SelectItem>
+                        <SelectItem value="civil">Civil</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.branch && <p className="text-xs text-red-500">{errors.branch}</p>}
                   </div>
-                  <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full transition-all ${passwordStrength.color}`}
-                      style={{ width: `${passwordStrength.strength}%` }}
-                    />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="year">Year</Label>
+                    <Select
+                      value={formData.year}
+                      onValueChange={(value) => setFormData({ ...formData, year: value })}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className={`h-12 rounded-xl border-slate-200 ${errors.year ? "border-red-500" : ""}`}>
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-slate-200">
+                        <SelectItem value="1">1st Year</SelectItem>
+                        <SelectItem value="2">2nd Year</SelectItem>
+                        <SelectItem value="3">3rd Year</SelectItem>
+                        <SelectItem value="4">4th Year</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {errors.year && <p className="text-xs text-red-500">{errors.year}</p>}
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Re-enter your password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  disabled={isLoading}
-                  className={`h-11 pr-10 ${errors.confirmPassword ? "border-red-500" : ""}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  disabled={isLoading}
-                >
-                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
               </div>
-              {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="organization">Organization / Club Name</Label>
+                  <Input
+                    id="organization"
+                    placeholder="Tech Club"
+                    value={formData.organization}
+                    onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+                    disabled={isLoading}
+                    className={`h-12 rounded-xl border-slate-200 focus:ring-sky-600 ${errors.organization ? "border-red-500" : ""}`}
+                  />
+                  {errors.organization && <p className="text-xs text-red-500">{errors.organization}</p>}
+                </div>
 
-            {/* College Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="college">College / University</Label>
-              <Select
-                value={formData.college}
-                onValueChange={(value) => setFormData({ ...formData, college: value })}
-                disabled={isLoading}
-              >
-                <SelectTrigger className={`h-11 ${errors.college ? "border-red-500" : ""}`}>
-                  <SelectValue placeholder="Select your college" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="iit-bombay">IIT Bombay</SelectItem>
-                  <SelectItem value="iit-delhi">IIT Delhi</SelectItem>
-                  <SelectItem value="nit-trichy">NIT Trichy</SelectItem>
-                  <SelectItem value="bits-pilani">BITS Pilani</SelectItem>
-                  <SelectItem value="vit-vellore">VIT Vellore</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.college && <p className="text-xs text-red-500">{errors.college}</p>}
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="orgRole">Your Role</Label>
+                  <Input
+                    id="orgRole"
+                    placeholder="President / Coordinator"
+                    value={formData.orgRole}
+                    onChange={(e) => setFormData({ ...formData, orgRole: e.target.value })}
+                    disabled={isLoading}
+                    className={`h-12 rounded-xl border-slate-200 focus:ring-sky-600 ${errors.orgRole ? "border-red-500" : ""}`}
+                  />
+                  {errors.orgRole && <p className="text-xs text-red-500">{errors.orgRole}</p>}
+                </div>
+              </div>
+            )}
 
-            {/* Branch and Year */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label htmlFor="branch">Branch</Label>
-                <Select
-                  value={formData.branch}
-                  onValueChange={(value) => setFormData({ ...formData, branch: value })}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className={`h-11 ${errors.branch ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder="Branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="cse">Computer Science</SelectItem>
-                    <SelectItem value="ece">Electronics</SelectItem>
-                    <SelectItem value="mech">Mechanical</SelectItem>
-                    <SelectItem value="civil">Civil</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.branch && <p className="text-xs text-red-500">{errors.branch}</p>}
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    disabled={isLoading}
+                    className={`h-12 pr-10 rounded-xl border-slate-200 ${errors.password ? "border-red-500" : ""}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && <p className="text-xs text-red-500">{errors.password}</p>}
+                {formData.password && (
+                  <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden mt-2">
+                    <div className={`h-full transition-all ${passwordStrength.color}`} style={{ width: `${passwordStrength.strength}%` }} />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="year">Year</Label>
-                <Select
-                  value={formData.year}
-                  onValueChange={(value) => setFormData({ ...formData, year: value })}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className={`h-11 ${errors.year ? "border-red-500" : ""}`}>
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1st Year</SelectItem>
-                    <SelectItem value="2">2nd Year</SelectItem>
-                    <SelectItem value="3">3rd Year</SelectItem>
-                    <SelectItem value="4">4th Year</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.year && <p className="text-xs text-red-500">{errors.year}</p>}
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={formData.confirmPassword}
+                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    disabled={isLoading}
+                    className={`h-12 pr-10 rounded-xl border-slate-200 ${errors.confirmPassword ? "border-red-500" : ""}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    disabled={isLoading}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && <p className="text-xs text-red-500">{errors.confirmPassword}</p>}
               </div>
             </div>
 
-            {/* Terms & Conditions */}
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 py-2">
               <Checkbox
                 id="terms"
                 checked={formData.terms}
                 onCheckedChange={(checked) => setFormData({ ...formData, terms: checked })}
                 disabled={isLoading}
-                className={errors.terms ? "border-red-500" : ""}
+                className={`rounded-md ${errors.terms ? "border-red-500" : "border-slate-300"}`}
               />
-              <Label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+              <Label htmlFor="terms" className="text-sm leading-tight text-slate-500 cursor-pointer">
                 I agree to the{" "}
-                <Link to="/terms" className="text-indigo-600 hover:underline">
-                  Terms & Conditions
-                </Link>{" "}
-                and{" "}
-                <Link to="/privacy" className="text-indigo-600 hover:underline">
-                  Privacy Policy
-                </Link>
+                <Link to="/terms" className="text-indigo-600 hover:underline font-semibold">Terms & Conditions</Link> 
+                {" "}and{" "}
+                <Link to="/privacy" className="text-indigo-600 hover:underline font-semibold">Privacy Policy</Link>
               </Label>
             </div>
-            {errors.terms && <p className="text-xs text-red-500 -mt-3">{errors.terms}</p>}
+            {errors.terms && <p className="text-xs text-red-500 -mt-4">{errors.terms}</p>}
 
-            {/* Signup Button */}
-            <Button type="submit" className="w-full h-11" disabled={isLoading}>
+            <Button type="submit" className={`w-full h-14 rounded-2xl text-lg font-bold shadow-xl transition-all ${isStudent ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-100' : 'bg-sky-600 hover:bg-sky-700 shadow-sky-100'}`} disabled={isLoading}>
               {isLoading ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Creating account...
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Creating Account...
                 </>
               ) : (
-                "Sign Up"
+                "Create Account"
               )}
             </Button>
           </form>
 
-          {/* Login Link */}
-          <div className="mt-6 text-center text-sm">
-            <span className="text-muted-foreground">Already have an account? </span>
-            <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium hover:underline">
-              Login
+          <div className="mt-8 text-center text-sm">
+            <span className="text-slate-500">Already have an account? </span>
+            <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-bold hover:underline">
+              Log in
             </Link>
           </div>
         </div>

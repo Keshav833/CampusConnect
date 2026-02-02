@@ -3,7 +3,7 @@ import AppRoutes from "./routes/AppRoutes";
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <div className="min-h-screen bg-background font-sans text-foreground antialiased">
         <AppRoutes />
       </div>

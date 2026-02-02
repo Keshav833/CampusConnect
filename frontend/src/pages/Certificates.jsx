@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -50,7 +49,6 @@ export default function Certificates() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">

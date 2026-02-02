@@ -11,7 +11,15 @@ const userSchema = new mongoose.Schema({
     required: true,
   },
 
-  organization: String, // only for organizers
+  // Student specific fields
+  regNo: String,
+  branch: String,
+  year: String,
+
+  // Organizer specific fields
+  organization: String,
+  orgRole: String,
+
   createdAt: { type: Date, default: Date.now },
 });
 

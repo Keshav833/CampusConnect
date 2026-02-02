@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { Navbar } from "@/components/Navbar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -31,7 +30,6 @@ export default function Profile() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         {/* Profile Header */}

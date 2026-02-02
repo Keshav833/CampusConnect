@@ -1,4 +1,3 @@
-import { Navbar } from "@/components/Navbar"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -28,7 +27,6 @@ export default function Feedback() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8 text-center">

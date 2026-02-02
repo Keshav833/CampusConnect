@@ -1,11 +1,19 @@
-import { OrganizerNavbar } from "@/components/OrganizerNavbar"
-import { Sidebar } from "@/components/Sidebar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 
 export default function OrganizerDashboard() {
+  const location = useLocation()
   const [activeSection, setActiveSection] = useState("overview")
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false)
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === '/organizer/dashboard') setActiveSection('overview');
+    else if (path === '/organizer/events') setActiveSection('my-events');
+    else if (path === '/organizer/create') setActiveSection('create-event');
+    else if (path === '/organizer/profile') setActiveSection('settings');
+  }, [location]);
 
   const stats = [
     { label: "Total Events", value: "12" },
@@ -498,14 +506,8 @@ export default function OrganizerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <OrganizerNavbar />
-
-      <div className="flex">
-        <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
-
-        <main className="flex-1 p-8 max-w-7xl">{renderContent()}</main>
-      </div>
+    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+      {renderContent()}
 
       {/* Announcement Modal */}
       {showAnnouncementModal && (
