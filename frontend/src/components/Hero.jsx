@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Link } from "react-router-dom"
+import TextType from "./TextType"
 
 export function Hero() {
   return (
@@ -12,12 +13,22 @@ export function Hero() {
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
           
           <div className="flex-1 text-left z-10 animate-in fade-in slide-in-from-left duration-1000 lg:-mt-20">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-[1.1]">
-              All Campus Events.<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-blue-600">
-                One Verified Platform.
-              </span>
-            </h1>
+            <div className="mb-2">
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+                <span className="block mb-2">All Campus Events.</span>
+                <TextType 
+                  text={["One Verified Platform", "Connect with Peers", "Discover Opportunities"]}
+                  as="div"
+                  className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-sky-400 py-2 min-h-[2em] block"
+                  typingSpeed={100}
+                  deletingSpeed={50}
+                  pauseDuration={2000}
+                  showCursor={true}
+                  cursorCharacter="|"
+                  cursorClassName="text-sky-400"
+                />
+              </h1>
+            </div>
             
             <p className="text-lg md:text-xl text-gray-600 mb-10 leading-relaxed max-w-xl">
               Discover, register, and track all campus events in one place. 
@@ -45,6 +56,17 @@ export function Hero() {
           </div>
 
           <div className="flex-[1.4] relative z-0 animate-in fade-in slide-in-from-right duration-1000 overflow-hidden max-h-[700px] -mr-12 lg:-mr-24">
+            
+            <div className="absolute inset-0 z-10 pointer-events-none">
+              <div className="absolute left-0 top-0 bottom-0 w-[80px] bg-gradient-to-r from-white via-white/50 to-transparent" />
+              <div className="absolute right-0 top-0 bottom-0 w-[60px] bg-gradient-to-l from-white via-white/20 to-transparent" />
+              <div className="absolute top-0 left-0 right-0 h-[120px] bg-gradient-to-b from-white via-white/30 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-[120px] bg-gradient-to-t from-white via-white/30 to-transparent" />
+            </div>
+            
+          
+            <div className="absolute inset-0 bg-indigo-600/40 blur-[100px] rounded-full transform -rotate-12 translate-x-1/4 scale-110 pointer-events-none" />
+            
             <div className="flex gap-4 transform rotate-[-10deg] justify-center scale-110 origin-center pl-16">
               
               <div className="flex flex-col gap-4 animate-marquee">
