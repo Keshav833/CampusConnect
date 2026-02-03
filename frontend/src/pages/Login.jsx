@@ -1,7 +1,7 @@
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { useState, useEffect } from "react"
+import { useNavigate, useLocation } from "react-router-dom"
 import { GoogleLogin } from "@react-oauth/google"
-import { ArrowLeft, Loader2, Sparkles, Eye, EyeOff } from "lucide-react"
+import { ArrowLeft, Loader2, Sparkles, Eye, EyeOff, Github } from "lucide-react"
 import "./Login.css"
 
 export default function Login() {
@@ -11,6 +11,35 @@ export default function Login() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Handle OAuth redirects (GitHub)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const success = params.get('success');
+    const errorParam = params.get('error');
+    const dataParam = params.get('data');
+
+    if (success === 'true' && dataParam) {
+      try {
+        const decodedData = JSON.parse(decodeURIComponent(dataParam));
+        localStorage.setItem('token', decodedData.token);
+        localStorage.setItem('userRole', decodedData.user.role);
+        localStorage.setItem('userData', JSON.stringify(decodedData.user));
+
+        if (decodedData.user.role === 'student') {
+          navigate("/events");
+        } else if (decodedData.user.role === 'organizer') {
+          navigate("/organizer/dashboard");
+        }
+      } catch (err) {
+        console.error("Failed to parse OAuth data:", err);
+        setError("Login failed. Please try again.");
+      }
+    } else if (errorParam) {
+      setError(decodeURIComponent(errorParam));
+    }
+  }, [location, navigate]);
 
   const handleGoogleSuccess = async (credentialResponse) => {
     setIsLoading(true)
@@ -55,6 +84,10 @@ export default function Login() {
     setError("Google Sign-In was unsuccessful. Please try again.");
   };
 
+  const handleGithubLogin = () => {
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/github`;
+  };
+
   const handleLogin = (e) => {
     e.preventDefault()
     // Manual login logic would go here
@@ -63,7 +96,7 @@ export default function Login() {
 
   return (
     <div className="login-page-wrapper">
-      {/* Left Visual Section — Separate from Form Card */}
+      {/* ... (rest of the visual-hero-section same) */}
       <div className="visual-hero-section">
         <div className="panel-header-alt">
           <div className="logo-container-alt">
@@ -98,11 +131,10 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="auth-form">
             <div className="input-group">
-              <label htmlFor="email">Email</label>
               <input
                 id="email"
                 type="email"
-                placeholder="name@university.edu"
+                placeholder="Email address"
                 className="styled-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -111,12 +143,11 @@ export default function Login() {
             </div>
 
             <div className="input-group">
-              <label htmlFor="password">Password</label>
               <div className="input-wrapper">
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
+                  placeholder="Password"
                   className="styled-input"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -158,6 +189,14 @@ export default function Login() {
                 text="continue_with"
               />
             </div>
+            
+            <button 
+              onClick={handleGithubLogin}
+              className="github-login-btn"
+            >
+              <Github className="w-5 h-5" />
+              <span>GitHub</span>
+            </button>
           </div>
 
           <div className="secondary-links">
