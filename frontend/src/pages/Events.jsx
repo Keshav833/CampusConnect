@@ -13,7 +13,7 @@ export default function Events() {
 
   useEffect(() => {
     // Fetch events from backend
-    axios.get('http://localhost:5000/api/events')
+    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events`)
       .then(res => {
         setEvents(res.data)
         setLoading(false)

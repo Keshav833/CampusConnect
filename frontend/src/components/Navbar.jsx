@@ -60,14 +60,14 @@ export function Navbar() {
         <div className="flex items-center gap-4 hidden md:flex">
           {!token ? (
             <>
-              <Link to="/role-selection" className="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors px-4">
+              <Link to="/login" className="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors px-4">
                 Login
               </Link>
               <Link to="/role-selection">
                 <Button
                   className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 shadow-md shadow-indigo-200/50 transition-all hover:scale-105 active:scale-95"
                   size="sm"
-                >
+                  >
                   Get Started
                 </Button>
               </Link>
