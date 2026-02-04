@@ -3,8 +3,6 @@ import Home from "../pages/Home";
 import Events from "../pages/Events";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
-import RoleSelection from "../pages/RoleSelection";
-import AuthChoice from "../pages/AuthChoice";
 import Profile from "../pages/Profile";
 import MyEvents from "../pages/MyEvents";
 import OrganizerDashboard from "../pages/OrganizerDashboard";
@@ -15,13 +13,17 @@ import Certificates from "../pages/Certificates";
 
 import StudentLayout from "../components/StudentLayout";
 import OrganizerLayout from "../components/OrganizerLayout";
+import AdminLayout from "../components/AdminLayout";
+import AdminHome from "../pages/admin/AdminHome";
+import AdminPendingEvents from "../pages/admin/AdminPendingEvents";
+import AdminAllEvents from "../pages/admin/AdminAllEvents";
+import AdminOrganizers from "../pages/admin/AdminOrganizers";
+import AdminEventDetail from "../pages/admin/AdminEventDetail";
 
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/role-selection" element={<RoleSelection />} />
-      <Route path="/auth-choice" element={<AuthChoice />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
 
@@ -42,6 +44,15 @@ export default function AppRoutes() {
         <Route path="/organizer/events" element={<OrganizerDashboard />} /> {/* Placeholder to avoid 404 */}
         <Route path="/organizer/create" element={<OrganizerDashboard />} /> {/* Placeholder to avoid 404 */}
         <Route path="/organizer/profile" element={<OrganizerDashboard />} /> {/* Placeholder to avoid 404 */}
+      </Route>
+
+      {/* Admin Protected Routes */}
+      <Route element={<AdminLayout />}>
+        <Route path="/admin/dashboard" element={<AdminHome />} />
+        <Route path="/admin/pending" element={<AdminPendingEvents />} />
+        <Route path="/admin/events" element={<AdminAllEvents />} />
+        <Route path="/admin/organizers" element={<AdminOrganizers />} />
+        <Route path="/admin/event/:id" element={<AdminEventDetail />} />
       </Route>
 
       <Route path="*" element={<div className="p-10 text-center">404 - Page Not Found</div>} />

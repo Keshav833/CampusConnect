@@ -6,6 +6,17 @@ const axios = require("axios");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const checkAdminRole = (email, requestedRole) => {
+  const adminEmails = process.env.ADMIN_EMAILS 
+    ? process.env.ADMIN_EMAILS.split(',').map(e => e.trim().toLowerCase()) 
+    : [];
+  if (email && adminEmails.includes(email.toLowerCase())) {
+    return 'admin';
+  }
+  // Prevent manual 'admin' role request if not whitelisted
+  return requestedRole === 'admin' ? 'student' : requestedRole;
+};
+
 // GOOGLE AUTH
 exports.googleAuth = async (req, res) => {
   try {
@@ -31,6 +42,9 @@ exports.googleAuth = async (req, res) => {
     }
 
     // Existing User: Log them in
+    user.role = checkAdminRole(user.email, user.role);
+    await user.save();
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -119,10 +133,13 @@ exports.githubCallback = async (req, res) => {
         name: name || username, 
         githubId 
       }));
-      return res.redirect(`${process.env.FRONTEND_URL}/role-selection?tempUser=${tempUser}`);
+      return res.redirect(`${process.env.FRONTEND_URL}/auth?tempUser=${tempUser}`);
     }
 
     // Existing User: Generate JWT and redirect to dashboard
+    user.role = checkAdminRole(user.email, user.role);
+    await user.save();
+
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
@@ -172,7 +189,7 @@ exports.signup = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role,
+      role: checkAdminRole(email, role),
       regNo: role === "student" ? regNo : null,
       branch: role === "student" ? branch : null,
       year: role === "student" ? year : null,
@@ -201,21 +218,67 @@ exports.signup = async (req, res) => {
 // LOGIN
 exports.login = async (req, res) => {
   try {
-    const { email, password, role } = req.body;
+    let { email, password } = req.body;
+    email = email?.trim();
+    password = password?.trim();
 
-    console.log("Login attempt:", { email, role });
+    console.log("Login attempt:", { email });
 
-    const user = await User.findOne({ email });
+    // MASTER ADMIN CHECK
+    const masterEmail = process.env.ADMIN_EMAILS ? process.env.ADMIN_EMAILS.split(',')[0].trim() : null;
+    const masterPassword = process.env.ADMIN_PASSWORD ? process.env.ADMIN_PASSWORD.trim() : null;
 
-    if (!user) return res.status(400).json({ error: "User not found" });
+    console.log("Master check attempt:", { 
+      inputEmail: email?.toLowerCase(), 
+      masterEmail: masterEmail?.toLowerCase(),
+      pwMatch: password === masterPassword,
+      hasMasterPw: !!masterPassword
+    });
 
-    // Ensure the role matches what they selected on frontend
-    if (user.role !== role) {
-      return res.status(403).json({ error: `Account exists but role is ${user.role}, not ${role}` });
+    if (email && masterEmail && email.toLowerCase() === masterEmail.toLowerCase() && password === masterPassword && masterPassword) {
+      console.log("Master admin bypass activated!");
+      let user = await User.findOne({ email: email.toLowerCase() });
+      if (!user) {
+        // Create system user if it doesn't exist
+        user = await User.create({
+          name: "System Admin",
+          email: masterEmail,
+          password: await bcrypt.hash(masterPassword, 10),
+          role: "admin"
+        });
+      } else if (user.role !== 'admin') {
+        user.role = 'admin';
+        await user.save();
+      }
+
+      const token = jwt.sign(
+        { id: user._id, role: 'admin' },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+      );
+
+      return res.status(200).json({
+        token,
+        role: 'admin',
+        user: { id: user._id, name: user.name, email: user.email, role: 'admin' }
+      });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      console.log("Login failed: User not found", email);
+      return res.status(400).json({ error: "User not found" });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: "Invalid credentials" });
+    if (!isMatch) {
+      console.log("Login failed: Invalid password for", email);
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    // Check if user should be admin based on whitelist
+    user.role = checkAdminRole(user.email, user.role);
+    await user.save();
 
     const token = jwt.sign(
       { id: user._id, role: user.role },

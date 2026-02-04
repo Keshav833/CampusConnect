@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate, useLocation, Link } from "react-router-dom"
 import { GoogleLogin } from "@react-oauth/google"
-import { ArrowLeft, Loader2, Sparkles, Eye, EyeOff, Github } from "lucide-react"
+import { ArrowLeft, Loader2, Eye, EyeOff, Github } from "lucide-react"
 import "./Login.css"
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  })
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -23,121 +26,98 @@ export default function Login() {
     if (success === 'true' && dataParam) {
       try {
         const decodedData = JSON.parse(decodeURIComponent(dataParam));
-        localStorage.setItem('token', decodedData.token);
-        localStorage.setItem('userRole', decodedData.user.role);
-        localStorage.setItem('userData', JSON.stringify(decodedData.user));
-
-        if (decodedData.user.role === 'student') {
-          navigate("/events");
-        } else if (decodedData.user.role === 'organizer') {
-          navigate("/organizer/dashboard");
-        }
-      } catch (err) {
-        console.error("Failed to parse OAuth data:", err);
-        setError("Login failed. Please try again.");
-      }
+        loginUser(decodedData);
+      } catch (err) { setError("OAuth parsing failed") }
     } else if (errorParam) {
       setError(decodeURIComponent(errorParam));
     }
   }, [location, navigate]);
 
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setIsLoading(true)
-    setError("")
+  const handleInputChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value })
+  }
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setIsLoading(true); setError("")
     try {
       const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/google`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: credentialResponse.credential }),
       });
-
       const data = await response.json();
-
       if (response.ok) {
         if (data.needsRole) {
-          localStorage.setItem('tempUser', JSON.stringify(data.user));
-          navigate('/role-selection');
+           // Redirect to role selection if new user from Google
+           navigate(`/signup?tempUser=${encodeURIComponent(JSON.stringify(data.user))}`);
         } else {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('userRole', data.role);
-          localStorage.setItem('userData', JSON.stringify(data.user));
-
-          if (data.role === 'student') {
-            navigate("/events");
-          } else if (data.role === 'organizer') {
-            navigate("/organizer/dashboard");
-          }
+          loginUser(data);
         }
-      } else {
-        setError(data.error || "Google authentication failed");
-      }
-    } catch (err) {
-      console.error("Login Error:", err);
-      setError("Unable to connect to server. Please try again.");
-    } finally {
-      setIsLoading(false)
-    }
+      } else setError(data.error);
+    } catch (err) { setError("Connection failed") }
+    finally { setIsLoading(false) }
   }
 
-  const handleGoogleError = () => {
-    setError("Google Sign-In was unsuccessful. Please try again.");
-  };
+  const loginUser = (data) => {
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('userRole', data.role);
+    localStorage.setItem('userData', JSON.stringify(data.user));
+    if (data.role === 'student') navigate("/events");
+    else if (data.role === 'admin') navigate("/admin/dashboard");
+    else navigate("/organizer/dashboard");
+  }
 
-  const handleGithubLogin = () => {
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/github`;
-  };
-
-  const handleLogin = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Manual login logic would go here
-    setError("Manual login is currently unavailable. Please use Google Login.")
+    setIsLoading(true); setError("")
+    try {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      const data = await response.json();
+      if (response.ok) loginUser(data);
+      else setError(data.error);
+    } catch (err) { setError("Authentication failed") }
+    finally { setIsLoading(false) }
   }
 
   return (
     <div className="login-page-wrapper">
-      {/* ... (rest of the visual-hero-section same) */}
       <div className="visual-hero-section">
         <div className="panel-header-alt">
           <div className="logo-container-alt">
-            <img src="/CC.png" alt="CampusConnect" className="logo-icon" />
-            <span>Campus Connect</span>
+             <img src="/CC.png" alt="CampusConnect" className="logo-icon" />
+             <span>Campus Connect</span>
           </div>
           <button onClick={() => navigate('/')} className="back-link-alt">
             <ArrowLeft className="w-4 h-4" />
             <span>Back to website</span>
           </button>
         </div>
-
         <div className="panel-footer-alt">
-          <h2 className="tagline-alt">Connecting Campus Events In One Place</h2>
-          <p className="sub-tagline-alt">Join thousands of students and never miss an event again.</p>
+          <h2 className="tagline-alt">Welcome Back</h2>
+          <p className="sub-tagline-alt">Log in to your Campus Connect account</p>
         </div>
       </div>
 
-      {/* Right Form Section — The Distinct Card */}
       <div className="form-content-section">
         <div className="login-form-card">
-          <div className="form-header">
-            <h1>Welcome back</h1>
-            <p>Log in to continue to Campus Connect</p>
+          <div className="form-header-simple">
+            <h1>Login</h1>
           </div>
+          {error && <div className="error-alert">{error}</div>}
 
-          {error && (
-            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm font-semibold animate-in fade-in slide-in-from-top-2 duration-300">
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="auth-form">
+          <form onSubmit={handleSubmit} className="auth-form">
             <div className="input-group">
               <input
                 id="email"
                 type="email"
                 placeholder="Email address"
                 className="styled-input"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleInputChange}
                 required
               />
             </div>
@@ -149,12 +129,12 @@ export default function Login() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Password"
                   className="styled-input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleInputChange}
                   required
                 />
-                <button
-                  type="button"
+                <button 
+                  type="button" 
                   className="eye-button"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -164,50 +144,23 @@ export default function Login() {
             </div>
 
             <button type="submit" className="submit-button" disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin mx-auto" />
-              ) : (
-                "Log in"
-              )}
+              {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Login"}
             </button>
           </form>
 
-          <div className="divider">
-            Or continue with
+          <div className="form-toggle-link">
+            <p>New to Campus Connect? <Link to="/signup"><span>Create an account</span></Link></p>
           </div>
+
+          <div className="divider">Or continue with</div>
 
           <div className="oauth-options">
             <div className="google-btn-wrapper">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={handleGoogleError}
-                useOneTap
-                theme="filled_blue"
-                shape="pill"
-                size="large"
-                width="100%"
-                text="continue_with"
-              />
+              <GoogleLogin onSuccess={handleGoogleSuccess} theme="filled_blue" shape="pill" size="large" />
             </div>
-            
-            <button 
-              onClick={handleGithubLogin}
-              className="github-login-btn"
-            >
+            <button onClick={() => window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/github`} className="github-login-btn">
               <Github className="w-5 h-5" />
               <span>GitHub</span>
-            </button>
-          </div>
-
-          <div className="secondary-links">
-            <p>
-              Don't have an account?
-              <button onClick={() => navigate('/signup')} className="link-btn">
-                Get started
-              </button>
-            </p>
-            <button className="link-btn mt-2 text-xs opacity-70">
-              Forgot password?
             </button>
           </div>
         </div>

@@ -220,7 +220,7 @@ export default function Home() {
               <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-8 tracking-tight"> Ready to dive in? </h2>
               <p className="text-xl md:text-2xl text-indigo-100 max-w-2xl mx-auto mb-12 leading-relaxed"> Join thousands of students and organizers building the future of campus connection. </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-                <Link to="/role-selection" className="w-full sm:w-auto">
+                <Link to="/signup" className="w-full sm:w-auto">
                   <Button size="lg" variant="secondary" className="w-full gap-3 text-lg px-12 py-8 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all">
                     Get Started Now
                     <ArrowRight className="w-6 h-6" />

@@ -63,7 +63,7 @@ export function Navbar() {
               <Link to="/login" className="text-sm font-semibold text-gray-700 hover:text-indigo-600 transition-colors px-4">
                 Login
               </Link>
-              <Link to="/role-selection">
+              <Link to="/signup">
                 <Button
                   className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6 shadow-md shadow-indigo-200/50 transition-all hover:scale-105 active:scale-95"
                   size="sm"

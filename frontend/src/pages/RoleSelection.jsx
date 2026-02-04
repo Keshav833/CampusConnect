@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Briefcase, ArrowRight, CheckCircle2, Loader2, Building2, UserCircle2 } from 'lucide-react';
+import { GraduationCap, Briefcase, ArrowRight, CheckCircle2, Loader2, Building2, UserCircle2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -47,11 +47,13 @@ export default function RoleSelection() {
       if (response.ok) {
         localStorage.removeItem('tempUser');
         localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', role);
+        localStorage.setItem('userRole', data.role);
         localStorage.setItem('userData', JSON.stringify(data.user));
 
-        if (role === 'student') {
+        if (data.role === 'student') {
           navigate("/events");
+        } else if (data.role === 'admin') {
+          navigate("/admin/dashboard");
         } else {
           navigate("/organizer/dashboard");
         }
