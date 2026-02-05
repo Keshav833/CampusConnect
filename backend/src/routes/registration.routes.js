@@ -4,7 +4,7 @@ const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
 const { 
   registerForEvent, 
-  checkRegistration, 
+  checkRegistrationStatus, 
   getMyRegistrations 
 } = require("../controllers/registration.controller");
 

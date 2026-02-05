@@ -1,5 +1,6 @@
 const Registration = require("../models/Registration");
 const Event = require("../models/Event");
+const Notification = require("../models/Notification");
 
 // Register For Event
 exports.registerForEvent = async (req, res) => {
@@ -35,12 +36,24 @@ exports.registerForEvent = async (req, res) => {
         return res.status(400).json({ message: "Event is full" });
     }
 
-    // 4️⃣ Create registration
     const registration = await Registration.create({
       studentId,
       eventId,
       status: "registered"
     });
+
+    // Create notification for student
+    const notification = await Notification.create({
+      userId: studentId,
+      title: "Registration Confirmed",
+      message: `You registered for ${event.title}`,
+      type: "registration",
+    });
+
+    // Emit live via socket
+    if (global.io) {
+      global.io.to(studentId.toString()).emit("notification", notification);
+    }
 
     res.status(201).json({
       message: "Registration successful",

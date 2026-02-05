@@ -12,7 +12,7 @@ import {
   Search
 } from "lucide-react"
 
-export function Sidebar({ role }) {
+export function Sidebar({ role, unreadNotifications = 0 }) {
   const navigate = useNavigate()
 
   const handleLogout = () => {
@@ -72,6 +72,9 @@ export function Sidebar({ role }) {
           >
             <item.icon className="w-5 h-5 opacity-70" />
             {item.label}
+            {item.id === "notifications" && unreadNotifications > 0 && (
+              <span className="ml-auto w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+            )}
           </NavLink>
         ))}
       </nav>

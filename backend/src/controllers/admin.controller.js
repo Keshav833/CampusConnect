@@ -1,5 +1,6 @@
 const Event = require("../models/Event");
 const User = require("../models/User");
+const Notification = require("../models/Notification");
 
 exports.getDashboardStats = async (req, res) => {
   try {
@@ -82,6 +83,20 @@ exports.approveEvent = async (req, res) => {
 
     event.status = "approved";
     await event.save();
+
+    // Create notification for organizer
+    const notification = await Notification.create({
+      userId: event.organizerId,
+      title: "Event Approved",
+      message: `${event.title} is now live`,
+      type: "approval",
+    });
+
+    // Emit live via socket
+    if (global.io) {
+      global.io.to(event.organizerId.toString()).emit("notification", notification);
+    }
+
     res.json({ message: "Event approved" });
   } catch (error) {
     console.error("Error in approveEvent:", error);
@@ -96,6 +111,20 @@ exports.rejectEvent = async (req, res) => {
 
     event.status = "rejected";
     await event.save();
+
+    // Create notification for organizer
+    const notification = await Notification.create({
+      userId: event.organizerId,
+      title: "Event Rejected",
+      message: `Your event ${event.title} was rejected`,
+      type: "rejection",
+    });
+
+    // Emit live via socket
+    if (global.io) {
+      global.io.to(event.organizerId.toString()).emit("notification", notification);
+    }
+
     res.json({ message: "Event rejected" });
   } catch (error) {
     console.error("Error in rejectEvent:", error);

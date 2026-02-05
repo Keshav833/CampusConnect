@@ -1,402 +1,126 @@
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Bell, CheckCircle2, AlertTriangle, Award, MapPin, Clock } from "lucide-react"
-import { Link } from "react-router-dom"
-import { useState } from "react"
-
-// Mock data
-const mockNotifications = [
-  {
-    id: "1",
-    type: "reminder",
-    eventName: "Tech Conference 2024",
-    message: "Event starts tomorrow at 10:00 AM",
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-    isRead: false,
-    category: "Tech",
-    eventId: "1",
-  },
-  {
-    id: "2",
-    type: "update",
-    eventName: "Spring Music Festival",
-    message: "Venue changed to Main Campus Auditorium",
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
-    isRead: false,
-    category: "Cultural",
-    eventId: "2",
-  },
-  {
-    id: "3",
-    type: "registration",
-    eventName: "Basketball Championship",
-    message: "Registration confirmed! Event on March 25, 2024",
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    isRead: true,
-    category: "Sports",
-    eventId: "3",
-  },
-  {
-    id: "4",
-    type: "certificate",
-    eventName: "Resume Workshop",
-    message: "Your participation certificate is ready to download",
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    isRead: false,
-    category: "Career",
-    eventId: "4",
-  },
-  {
-    id: "5",
-    type: "reminder",
-    eventName: "International Food Fair",
-    message: "Event starts today at 12:00 PM",
-    timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
-    isRead: false,
-    category: "Food",
-    eventId: "5",
-  },
-  {
-    id: "6",
-    type: "cancellation",
-    eventName: "Outdoor Yoga Session",
-    message: "Event cancelled due to weather conditions. Refund processed.",
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    isRead: true,
-    category: "Health",
-    eventId: "6",
-  },
-  {
-    id: "7",
-    type: "update",
-    eventName: "AI Workshop",
-    message: "Time changed to 3:00 PM instead of 2:00 PM",
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    isRead: true,
-    category: "Tech",
-    eventId: "7",
-  },
-  {
-    id: "8",
-    type: "registration",
-    eventName: "Startup Pitch Competition",
-    message: "Successfully registered for the event",
-    timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
-    isRead: true,
-    category: "Career",
-    eventId: "8",
-  },
-]
+import { useState, useEffect } from "react"
+import { Bell, CheckCircle2, XCircle, Info, Calendar, Loader2, Check } from "lucide-react"
+import axios from "axios"
 
 export default function Notifications() {
-  const [notifications, setNotifications] = useState(mockNotifications)
-  const [activeFilter, setActiveFilter] = useState("all")
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(true)
+  const token = localStorage.getItem("token")
 
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case "registration":
-        return <CheckCircle2 className="w-5 h-5 text-green-600" />
-      case "reminder":
-        return <Bell className="w-5 h-5 text-blue-600" />
-      case "update":
-        return <MapPin className="w-5 h-5 text-orange-600" />
-      case "cancellation":
-        return <AlertTriangle className="w-5 h-5 text-red-600" />
-      case "certificate":
-        return <Award className="w-5 h-5 text-purple-600" />
-      default:
-        return <Bell className="w-5 h-5 text-gray-600" />
+  useEffect(() => {
+    fetchNotifications()
+  }, [])
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setNotifications(res.data)
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
+    } finally {
+      setLoading(false)
     }
   }
 
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case "registration":
-        return "bg-green-50 border-green-200"
-      case "reminder":
-        return "bg-blue-50 border-blue-200"
-      case "update":
-        return "bg-orange-50 border-orange-200"
-      case "cancellation":
-        return "bg-red-50 border-red-200"
-      case "certificate":
-        return "bg-purple-50 border-purple-200"
-      default:
-        return "bg-gray-50 border-gray-200"
+  const markAsRead = async (id) => {
+    try {
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/notifications/${id}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setNotifications(notifications.map(n => n._id === id ? { ...n, read: true } : n))
+    } catch (error) {
+      console.error("Error marking as read:", error)
     }
   }
 
-  const formatTimestamp = (date) => {
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const diffMins = Math.floor(diffMs / 60000)
-    const diffHours = Math.floor(diffMs / 3600000)
-    const diffDays = Math.floor(diffMs / 86400000)
-
-    if (diffMins < 60) return `${diffMins}m ago`
-    if (diffHours < 24) return `${diffHours}h ago`
-    if (diffDays === 1) return "Yesterday"
-    if (diffDays < 7) return `${diffDays}d ago`
-    return date.toLocaleDateString()
+  const markAllAsRead = async () => {
+    try {
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/notifications/read-all`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setNotifications(notifications.map(n => ({ ...n, read: true })))
+    } catch (error) {
+      console.error("Error marking all as read:", error)
+    }
   }
 
-  const groupNotificationsByDate = (notifs) => {
-    const today = []
-    const yesterday = []
-    const earlier = []
-
-    const now = new Date()
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000)
-
-    notifs.forEach((notif) => {
-      // Ensure timestamp is Date object in case it's stringified
-      const ts = new Date(notif.timestamp)
-      if (ts >= todayStart) {
-        today.push(notif)
-      } else if (ts >= yesterdayStart) {
-        yesterday.push(notif)
-      } else {
-        earlier.push(notif)
-      }
-    })
-
-    return { today, yesterday, earlier }
+  const getIcon = (type) => {
+    switch (type) {
+      case "approval": return <CheckCircle2 className="w-5 h-5 text-green-500" />
+      case "rejection": return <XCircle className="w-5 h-5 text-red-500" />
+      case "registration": return <Calendar className="w-5 h-5 text-blue-500" />
+      case "reminder": return <Bell className="w-5 h-5 text-amber-500" />
+      default: return <Info className="w-5 h-5 text-gray-500" />
+    }
   }
 
-  const markAllAsRead = () => {
-    setNotifications(notifications.map((n) => ({ ...n, isRead: true })))
-  }
-
-  const clearAll = () => {
-    setNotifications([])
-  }
-
-  const markAsRead = (id) => {
-    setNotifications(notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
-  }
-
-  const filteredNotifications = notifications.filter((n) => {
-    if (activeFilter === "all") return true
-    if (activeFilter === "unread") return !n.isRead
-    if (activeFilter === "reminders") return n.type === "reminder"
-    if (activeFilter === "updates") return n.type === "update"
-    return true
-  })
-
-  const { today, yesterday, earlier } = groupNotificationsByDate(filteredNotifications)
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-background">
-
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Notifications</h1>
-            {unreadCount > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                You have {unreadCount} unread notification{unreadCount !== 1 ? "s" : ""}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={markAllAsRead} disabled={unreadCount === 0}>
-              Mark all as read
-            </Button>
-            <Button variant="ghost" size="sm" onClick={clearAll} disabled={notifications.length === 0}>
-              Clear all
-            </Button>
-          </div>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
+          <p className="text-gray-500 mt-1">Stay updated with your activities</p>
         </div>
+        {notifications.some(n => !n.read) && (
+          <button 
+            onClick={markAllAsRead}
+            className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-2"
+          >
+            <Check className="w-4 h-4" />
+            Mark all as read
+          </button>
+        )}
+      </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-          <Button
-            variant={activeFilter === "all" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveFilter("all")}
-          >
-            All
-            {activeFilter === "all" && notifications.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {notifications.length}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            variant={activeFilter === "unread" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveFilter("unread")}
-          >
-            Unread
-            {unreadCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {unreadCount}
-              </Badge>
-            )}
-          </Button>
-          <Button
-            variant={activeFilter === "reminders" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveFilter("reminders")}
-          >
-            Reminders
-          </Button>
-          <Button
-            variant={activeFilter === "updates" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveFilter("updates")}
-          >
-            Updates
-          </Button>
-        </div>
-
-        {/* Notifications List */}
-        {filteredNotifications.length === 0 ? (
-          <div className="text-center py-16">
-            <Bell className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold text-foreground mb-2">No notifications yet</h3>
-            <p className="text-muted-foreground">You're all caught up!</p>
+      <div className="space-y-4">
+        {notifications.length === 0 ? (
+          <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">No notifications yet</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {/* Today */}
-            {today.length > 0 && (
-              <div>
-                <h2 className="text-sm font-semibold text-muted-foreground mb-3">Today</h2>
-                <div className="space-y-2">
-                  {today.map((notification) => (
-                    <Link
-                      key={notification.id}
-                      to={notification.eventId ? `/events/${notification.eventId}` : "/my-events"}
-                      onClick={() => markAsRead(notification.id)}
-                      className="block"
-                    >
-                      <div
-                        className={`p-4 rounded-lg border ${getNotificationColor(notification.type)} hover:shadow-md transition-shadow ${
-                          !notification.isRead ? "border-l-4" : ""
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5">{getNotificationIcon(notification.type)}</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h3 className="font-semibold text-foreground text-sm">{notification.eventName}</h3>
-                              {!notification.isRead && (
-                                <div className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {formatTimestamp(notification.timestamp)}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {notification.category}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
+          notifications.map((notification) => (
+            <div 
+              key={notification._id}
+              onClick={() => !notification.read && markAsRead(notification._id)}
+              className={`p-5 rounded-2xl border transition-all duration-200 flex gap-4 cursor-pointer ${
+                notification.read 
+                  ? "bg-white border-gray-100 opacity-75" 
+                  : "bg-white border-indigo-100 shadow-sm shadow-indigo-50"
+              }`}
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                notification.read ? "bg-gray-50" : "bg-indigo-50"
+              }`}>
+                {getIcon(notification.type)}
               </div>
-            )}
-
-            {/* Yesterday */}
-            {yesterday.length > 0 && (
-              <div>
-                <h2 className="text-sm font-semibold text-muted-foreground mb-3">Yesterday</h2>
-                <div className="space-y-2">
-                  {yesterday.map((notification) => (
-                    <Link
-                      key={notification.id}
-                      to={notification.eventId ? `/events/${notification.eventId}` : "/my-events"}
-                      onClick={() => markAsRead(notification.id)}
-                      className="block"
-                    >
-                      <div
-                        className={`p-4 rounded-lg border ${getNotificationColor(notification.type)} hover:shadow-md transition-shadow ${
-                          !notification.isRead ? "border-l-4" : ""
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5">{getNotificationIcon(notification.type)}</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h3 className="font-semibold text-foreground text-sm">{notification.eventName}</h3>
-                              {!notification.isRead && (
-                                <div className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {formatTimestamp(notification.timestamp)}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {notification.category}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+              
+              <div className="flex-1">
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className={`text-sm font-semibold ${notification.read ? "text-gray-700" : "text-gray-900"}`}>
+                    {notification.title}
+                  </h3>
+                  <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                    {new Date(notification.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
+                <p className={`text-sm mt-1 mb-2 ${notification.read ? "text-gray-500" : "text-gray-600"}`}>
+                  {notification.message}
+                </p>
+                {!notification.read && (
+                  <span className="w-2 h-2 bg-indigo-500 rounded-full inline-block"></span>
+                )}
               </div>
-            )}
-
-            {/* Earlier */}
-            {earlier.length > 0 && (
-              <div>
-                <h2 className="text-sm font-semibold text-muted-foreground mb-3">Earlier</h2>
-                <div className="space-y-2">
-                  {earlier.map((notification) => (
-                    <Link
-                      key={notification.id}
-                      to={notification.eventId ? `/events/${notification.eventId}` : "/my-events"}
-                      onClick={() => markAsRead(notification.id)}
-                      className="block"
-                    >
-                      <div
-                        className={`p-4 rounded-lg border ${getNotificationColor(notification.type)} hover:shadow-md transition-shadow ${
-                          !notification.isRead ? "border-l-4" : ""
-                        }`}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="mt-0.5">{getNotificationIcon(notification.type)}</div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
-                              <h3 className="font-semibold text-foreground text-sm">{notification.eventName}</h3>
-                              {!notification.isRead && (
-                                <div className="w-2 h-2 rounded-full bg-blue-600 mt-1.5 flex-shrink-0" />
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground mb-2">{notification.message}</p>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                {formatTimestamp(notification.timestamp)}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {notification.category}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          ))
         )}
       </div>
     </div>
