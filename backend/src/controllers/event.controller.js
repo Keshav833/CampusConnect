@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const Event = require("../models/Event");
+const Registration = require("../models/Registration");
+const jwt = require("jsonwebtoken");
 
 // Get only approved events (for students/public)
 exports.getEvents = async (req, res) => {
@@ -41,12 +43,74 @@ exports.getEventDetail = async (req, res) => {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ error: "Event not found" });
     
-    // Optional: Only show if approved or if requester is the organizer/admin
-    // For now, let's keep it simple as per user spec focus on "visible to students"
-    res.json(event);
+    // Check if user is registered (optional auth)
+    let isRegistered = false;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.split(" ")[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const registration = await Registration.findOne({ userId: decoded.id, eventId: event._id });
+        if (registration) isRegistered = true;
+      } catch (err) {
+        // Token might be expired or invalid, ignore for public view
+      }
+    }
+
+    // Get registration count
+    const registeredCount = await Registration.countDocuments({ eventId: event._id, status: "registered" });
+
+    res.json({
+      ...event._doc,
+      isRegistered,
+      registeredCount,
+      seatsAvailable: Math.max(0, (event.totalSeats || 100) - registeredCount)
+    });
   } catch (error) {
     console.error("Error fetching event details:", error);
     res.status(500).json({ error: "Failed to fetch event details" });
+  }
+};
+
+// Register for an event
+exports.registerForEvent = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ error: "Event not found" });
+
+    if (event.status !== "approved") {
+      return res.status(400).json({ error: "Registration is not open for this event" });
+    }
+
+    // Check if already registered
+    const existingRegistration = await Registration.findOne({
+      userId: req.user.id,
+      eventId: event._id
+    });
+
+    if (existingRegistration) {
+      return res.status(400).json({ error: "You are already registered for this event" });
+    }
+
+    // Check capacity
+    const registeredCount = await Registration.countDocuments({ eventId: event._id, status: "registered" });
+    if (registeredCount >= (event.totalSeats || 100)) {
+      return res.status(400).json({ error: "Event is full" });
+    }
+
+    const registration = await Registration.create({
+      userId: req.user.id,
+      eventId: event._id,
+      status: "registered"
+    });
+
+    res.status(201).json({
+      message: "Successfully registered!",
+      registration
+    });
+  } catch (error) {
+    console.error("Error registering for event:", error);
+    res.status(500).json({ error: "Failed to register for event" });
   }
 };
 
@@ -89,5 +153,29 @@ exports.updateEvent = async (req, res) => {
   } catch (error) {
     console.error("Error updating event:", error);
     res.status(500).json({ error: "Failed to update event" });
+  }
+};
+
+// Get registrations for the logged-in student
+exports.getStudentRegistrations = async (req, res) => {
+  try {
+    const registrations = await Registration.find({ userId: req.user.id })
+      .populate("eventId")
+      .sort({ createdAt: -1 });
+
+    // Format the response and filter out if event doesn't exist anymore
+    const formatted = registrations
+      .filter(reg => reg.eventId)
+      .map(reg => ({
+        registrationId: reg._id,
+        status: reg.status,
+        appliedAt: reg.createdAt,
+        ...reg.eventId._doc
+      }));
+
+    res.json(formatted);
+  } catch (error) {
+    console.error("Error fetching student registrations:", error);
+    res.status(500).json({ error: "Failed to fetch your registrations" });
   }
 };

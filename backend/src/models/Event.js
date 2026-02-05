@@ -24,6 +24,7 @@ const eventSchema = new mongoose.Schema({
     default: "pending"
   },
   rejectionReason: { type: String, default: null },
+  totalSeats: { type: Number, default: 100 },
   createdAt: { type: Date, default: Date.now },
 });
 

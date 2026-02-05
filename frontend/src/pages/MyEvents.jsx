@@ -1,6 +1,7 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link } from "react-router-dom"
-import { Search, Calendar, Download, QrCode, Filter } from "lucide-react"
+import { Search, Calendar, Download, QrCode, Filter, Loader2 } from "lucide-react"
+import axios from "axios"
 
 // Mock data for registered events
 const mockRegisteredEvents = [
@@ -85,23 +86,48 @@ const mockRegisteredEvents = [
 ]
 
 export default function MyEvents() {
+  const [registrations, setRegistrations] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [selectedStatus, setSelectedStatus] = useState("All")
 
-  const categories = ["All", "Tech", "Cultural", "Sports", "Workshop"]
-  const statuses = ["All", "Registered", "Attended", "Cancelled"]
+  useEffect(() => {
+    fetchRegistrations()
+  }, [])
 
-  const filteredEvents = mockRegisteredEvents.filter((event) => {
-    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === "All" || event.category === selectedCategory
-    const matchesStatus = selectedStatus === "All" || event.status === selectedStatus
+  const fetchRegistrations = async () => {
+    try {
+      const token = localStorage.getItem("token")
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events/registrations/my`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setRegistrations(res.data)
+    } catch (error) {
+      console.error("Error fetching registrations:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const categories = ["All", "Tech", "Cultural", "Sports", "Workshops", "Hackathons", "Clubs"]
+  const statuses = ["All", "Registered", "Waitlist"]
+
+  const filteredEvents = registrations.filter((reg) => {
+    const matchesSearch = reg.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesCategory = selectedCategory === "All" || reg.category === selectedCategory
+    const matchesStatus = selectedStatus === "All" || reg.status.toLowerCase() === selectedStatus.toLowerCase()
     return matchesSearch && matchesCategory && matchesStatus
   })
 
-  const upcomingEvents = filteredEvents.filter((e) => e.type === "upcoming")
-  const ongoingEvents = filteredEvents.filter((e) => e.type === "ongoing")
-  const pastEvents = filteredEvents.filter((e) => e.type === "past")
+  const upcomingEvents = filteredEvents.filter((reg) => new Date(reg.date) >= new Date().setHours(0,0,0,0))
+  const pastEvents = filteredEvents.filter((reg) => new Date(reg.date) < new Date().setHours(0,0,0,0))
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+       <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+    </div>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,40 +183,26 @@ export default function MyEvents() {
           </div>
         </div>
 
-        {/* Ongoing Events */}
-        {ongoingEvents.length > 0 && (
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-              <span className="inline-block w-3 h-3 bg-green-500 rounded-full animate-pulse"></span>
-              Ongoing Events
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {ongoingEvents.map((event) => (
-                <EventRegistrationCard key={event.id} event={event} />
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Upcoming Events */}
         {upcomingEvents.length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">Upcoming Events</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {upcomingEvents.map((event) => (
-                <EventRegistrationCard key={event.id} event={event} />
+              {upcomingEvents.map((reg) => (
+                <EventRegistrationCard key={reg.registrationId} event={reg} />
               ))}
             </div>
           </div>
         )}
+
 
         {/* Past Events */}
         {pastEvents.length > 0 && (
           <div className="mb-8">
             <h2 className="text-2xl font-bold mb-4">Past Events</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {pastEvents.map((event) => (
-                <EventRegistrationCard key={event.id} event={event} />
+              {pastEvents.map((reg) => (
+                <EventRegistrationCard key={reg.registrationId} event={reg} />
               ))}
             </div>
           </div>
@@ -212,15 +224,15 @@ export default function MyEvents() {
 
 function EventRegistrationCard({ event }) {
   return (
-    <div className="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition">
+    <div className="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition flex flex-col">
       <div className="h-40 relative">
         <img 
-          src={event.image || "/placeholder.svg"} 
+          src={event.image || "/Banner_demo.png"} 
           alt={event.title} 
           className="object-cover w-full h-full" 
         />
         <div className="absolute top-3 right-3">
-          <StatusBadge status={event.status} />
+          <StatusBadge status={event.status === "registered" ? "Registered" : "Waitlist"} />
         </div>
       </div>
 
@@ -240,37 +252,13 @@ function EventRegistrationCard({ event }) {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-4 space-y-2">
+        <div className="mt-auto pt-4 space-y-2">
           <Link
-            to={`/events/${event.id}`}
+            to={`/events/${event._id}`}
             className="block w-full py-2 bg-indigo-600 text-white rounded-lg text-sm text-center hover:bg-indigo-700 transition"
           >
             View Details
           </Link>
-
-          {/* Event Day Check-in */}
-          {event.isEventDay && event.status === "Registered" && (
-            <button className="w-full py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition flex items-center justify-center gap-2">
-              <QrCode className="w-4 h-4" />
-              Check-in Now
-            </button>
-          )}
-
-          {/* Upcoming Event Actions */}
-          {event.type === "upcoming" && !event.isEventDay && (
-            <button className="w-full py-2 border border-indigo-600 text-indigo-600 rounded-lg text-sm hover:bg-indigo-50 transition flex items-center justify-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Add to Calendar
-            </button>
-          )}
-
-          {/* Past Event Certificate */}
-          {event.type === "past" && event.certificateAvailable && event.status === "Attended" && (
-            <button className="w-full py-2 border border-indigo-600 text-indigo-600 rounded-lg text-sm hover:bg-indigo-50 transition flex items-center justify-center gap-2">
-              <Download className="w-4 h-4" />
-              Download Certificate
-            </button>
-          )}
         </div>
       </div>
     </div>
