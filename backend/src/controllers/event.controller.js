@@ -4,7 +4,7 @@ const Event = require("../models/Event");
 // Get only approved events (for students/public)
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: "approved" }).sort({ createdAt: -1 });
+    const events = await Event.find({ status: "approved" }).sort({ date: 1 });
     res.json(events);
   } catch (error) {
     console.error("Error fetching events:", error);

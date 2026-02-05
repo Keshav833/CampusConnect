@@ -94,14 +94,16 @@ export default function Events() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredEvents.map((event) => (
                 <EventCard
-                  key={event._id || event.id} // Handle MongoDB _id or seed id
+                  key={event._id || event.id}
                   id={event._id || event.id}
                   title={event.title}
                   category={event.category}
                   description={event.description}
                   date={event.date}
+                  time={event.time}
                   venue={event.venue}
                   image={event.image}
+                  organizerName={event.organizerName}
                 />
               ))}
             </div>
