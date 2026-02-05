@@ -41,9 +41,10 @@ export default function AppRoutes() {
       {/* Organizer Protected Routes */}
       <Route element={<OrganizerLayout />}>
         <Route path="/organizer/dashboard" element={<OrganizerDashboard />} />
-        <Route path="/organizer/events" element={<OrganizerDashboard />} /> {/* Placeholder to avoid 404 */}
-        <Route path="/organizer/create" element={<OrganizerDashboard />} /> {/* Placeholder to avoid 404 */}
-        <Route path="/organizer/profile" element={<OrganizerDashboard />} /> {/* Placeholder to avoid 404 */}
+        <Route path="/organizer/events" element={<OrganizerDashboard />} />
+        <Route path="/organizer/create" element={<OrganizerDashboard />} />
+        <Route path="/organizer/profile" element={<OrganizerDashboard />} />
+        <Route path="/notifications" element={<Notifications />} />
       </Route>
 
       {/* Admin Protected Routes */}
