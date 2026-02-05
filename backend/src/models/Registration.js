@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const registrationSchema = new mongoose.Schema({
-  userId: {
+  studentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
@@ -16,13 +16,13 @@ const registrationSchema = new mongoose.Schema({
     enum: ["registered", "waitlist"],
     default: "registered"
   },
-  createdAt: {
+  registeredAt: {
     type: Date,
     default: Date.now
   }
 });
 
 // Ensure a user can only register once for an event
-registrationSchema.index({ userId: 1, eventId: 1 }, { unique: true });
+registrationSchema.index({ studentId: 1, eventId: 1 }, { unique: true });
 
 module.exports = mongoose.model("Registration", registrationSchema);

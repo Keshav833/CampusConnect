@@ -6,6 +6,7 @@ const authRoutes = require("./routes/auth.routes");
 const eventRoutes = require("./routes/event.routes");
 const adminRoutes = require("./routes/admin.routes");
 const uploadRoutes = require("./routes/upload.routes");
+const registrationRoutes = require("./routes/registration.routes");
 
 const app = express();
 
@@ -19,5 +20,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/registrations", registrationRoutes);
 
 module.exports = app;

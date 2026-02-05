@@ -99,7 +99,7 @@ export default function MyEvents() {
   const fetchRegistrations = async () => {
     try {
       const token = localStorage.getItem("token")
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events/registrations/my`, {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/registrations/my`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setRegistrations(res.data)

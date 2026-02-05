@@ -22,6 +22,7 @@ export default function EventDetails() {
   const [loading, setLoading] = useState(true)
   const [registering, setRegistering] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isRegistered, setIsRegistered] = useState(false)
   const [reminderSet, setReminderSet] = useState(false)
 
   const token = localStorage.getItem("token")
@@ -29,7 +30,21 @@ export default function EventDetails() {
 
   useEffect(() => {
     fetchEventDetails()
-  }, [id])
+    if (token && userRole === "student") {
+      checkRegistrationStatus()
+    }
+  }, [id, token, userRole])
+
+  const checkRegistrationStatus = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/registrations/${id}/status`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setIsRegistered(res.data.registered)
+    } catch (error) {
+      console.error("Error checking registration status:", error)
+    }
+  }
 
   const fetchEventDetails = async () => {
     try {
@@ -48,7 +63,7 @@ export default function EventDetails() {
       navigate("/login")
       return
     }
-    
+
     if (userRole !== "student") {
       alert("Only students can register for events.")
       return
@@ -57,14 +72,15 @@ export default function EventDetails() {
     setRegistering(true)
     try {
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/events/${id}/register`, 
-        {}, 
+        `${import.meta.env.VITE_BACKEND_URL}/api/registrations`,
+        { eventId: id },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setShowSuccessModal(true)
-      fetchEventDetails() // Refresh registration status
+      setIsRegistered(true)
+      fetchEventDetails() // Refresh registration count
     } catch (error) {
-      alert(error.response?.data?.error || "Registration failed")
+      alert(error.response?.data?.message || error.response?.data?.error || "Registration failed")
     } finally {
       setRegistering(false)
     }
@@ -173,7 +189,7 @@ export default function EventDetails() {
          <div className="flex gap-4 p-4 bg-indigo-50 rounded-2xl">
             <Users className="text-indigo-600" />
             <div className="text-sm">
-                <span className="font-bold text-indigo-900">{event.registeredCount} Students</span> already registered. 
+                <span className="font-bold text-indigo-900">{event.registeredCount} Students</span> already registered.
                 {event.seatsAvailable > 0 ? ` ${event.seatsAvailable} spots left!` : " Event is full."}
             </div>
          </div>
@@ -181,7 +197,7 @@ export default function EventDetails() {
 
       {/* 6️⃣ & 7️⃣ Sticky Footer CTAs */}
       <div className="sticky-footer">
-        <button 
+        <button
           className={`btn-secondary ${reminderSet ? 'active' : ''}`}
           onClick={handleSetReminder}
           disabled={isPassed}
@@ -191,19 +207,17 @@ export default function EventDetails() {
 
         {isPassed ? (
           <button className="btn-primary" disabled>Event Completed</button>
-        ) : event.isRegistered ? (
-          <button className="btn-primary" style={{ background: '#10b981' }} disabled>
+        ) : isRegistered ? (
+          <button className="btn-primary" disabled>
             Registered ✓
           </button>
-        ) : isFull ? (
-          <button className="btn-primary" disabled>Event Full</button>
         ) : (
-          <button 
-            className="btn-primary" 
-            onClick={handleRegister} 
-            disabled={registering}
+          <button
+            className="btn-primary"
+            onClick={handleRegister}
+            disabled={registering || event.seatsAvailable === 0}
           >
-            {registering ? "Processing..." : "Register for Event"}
+            {registering ? "Processing..." : event.seatsAvailable === 0 ? "Event Full" : "Register for Event"}
           </button>
         )}
       </div>
