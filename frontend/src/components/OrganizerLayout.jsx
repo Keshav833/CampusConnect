@@ -8,6 +8,7 @@ export default function OrganizerLayout() {
   const userRole = localStorage.getItem('userRole');
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (!token || userRole !== 'organizer' || !userData.id) return;
@@ -33,8 +34,13 @@ export default function OrganizerLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar role="organizer" unreadNotifications={unreadCount} />
-      <main className="flex-1 ml-0 md:ml-64 p-6 overflow-y-auto">
+      <Sidebar 
+        role="organizer" 
+        unreadNotifications={unreadCount} 
+        isCollapsed={isCollapsed}
+        onToggle={() => setIsCollapsed(!isCollapsed)}
+      />
+      <main className={`flex-1 transition-all duration-300 p-6 overflow-y-auto ${isCollapsed ? "ml-[72px]" : "ml-[240px]"}`}>
         <Outlet />
       </main>
     </div>

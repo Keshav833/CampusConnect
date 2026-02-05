@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
 import axios from "axios"
-import { Upload, X, ImageIcon } from "lucide-react"
+import { Upload, X, ImageIcon, LayoutDashboard, PlusCircle, Calendar, Bell, Clock, CheckCircle2, XCircle, ChevronRight, Edit3 } from "lucide-react"
 
 export default function OrganizerDashboard() {
   const location = useLocation()
@@ -15,38 +15,9 @@ export default function OrganizerDashboard() {
   const [eventTab, setEventTab] = useState("all")
   const [editingEvent, setEditingEvent] = useState(null)
 
-  const allEventsMock = [
-    {
-      id: 1,
-      title: "Web Development Workshop",
-      date: "Jan 20, 2025",
-      registrations: 320,
-      status: "approved",
-    },
-    {
-      id: 2,
-      title: "AI & Machine Learning Seminar",
-      date: "Jan 25, 2025",
-      registrations: 185,
-      status: "approved",
-    },
-    {
-      id: 3,
-      title: "Hackathon 2025",
-      date: "Feb 1, 2025",
-      registrations: 450,
-      status: "pending",
-    },
-    {
-      id: 4,
-      title: "Career Fair 2025",
-      date: "Feb 10, 2025",
-      registrations: 680,
-      status: "approved",
-    },
-  ]
-
-  const [events, setEvents] = useState(allEventsMock)
+  const [events, setEvents] = useState([])
+  const [statsData, setStatsData] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 })
+  const [recentNotifications, setRecentNotifications] = useState([])
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -57,6 +28,28 @@ export default function OrganizerDashboard() {
         setBannerPreview(reader.result)
       }
       reader.readAsDataURL(file)
+    }
+  }
+
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events/organizer/stats`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      setStatsData(res.data)
+    } catch (error) {
+      console.error("Error fetching stats:", error)
+    }
+  }
+
+  const fetchRecentNotifications = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+      })
+      setRecentNotifications(res.data.slice(0, 4))
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
     }
   }
 
@@ -85,7 +78,8 @@ export default function OrganizerDashboard() {
       date: event.date,
       time: event.time,
       venue: event.venue,
-      image: event.image
+      image: event.image,
+      totalSeats: event.totalSeats || 100
     })
     setBannerPreview(event.image)
     setActiveSection("create-event")
@@ -162,6 +156,8 @@ export default function OrganizerDashboard() {
 
   useEffect(() => {
     fetchEvents()
+    fetchStats()
+    fetchRecentNotifications()
   }, [])
 
   useEffect(() => {
@@ -172,11 +168,11 @@ export default function OrganizerDashboard() {
     else if (path === '/organizer/profile') setActiveSection('settings');
   }, [location]);
 
-  const stats = [
-    { label: "Total Events", value: events.length },
-    { label: "Approved Events", value: events.filter(e => e.status === "approved").length },
-    { label: "Pending Approval", value: events.filter(e => e.status === "pending").length },
-    { label: "Rejected Events", value: events.filter(e => e.status === "rejected").length },
+  const dashboardStats = [
+    { label: "Pending Approval", value: statsData.pending, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Approved Events", value: statsData.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+    { label: "Rejected Events", value: statsData.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+    { label: "Total Submissions", value: statsData.total, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
   ]
 
   const upcomingEvents = events.filter(e => e.status === "approved")
@@ -241,61 +237,141 @@ export default function OrganizerDashboard() {
     date: "",
     time: "",
     venue: "",
-    image: ""
+    image: "",
+    totalSeats: 100
   })
 
   const renderContent = () => {
     switch (activeSection) {
       case "overview":
         return (
-          <>
-            {/* Stats Cards */}
-            <section className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-              {stats.map((stat) => (
-                <div key={stat.label} className="bg-white p-6 rounded-xl border shadow-sm">
-                  <p className="text-sm text-gray-500">{stat.label}</p>
-                  <h2 className="text-3xl font-bold mt-2">{stat.value}</h2>
+          <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {dashboardStats.map((stat) => (
+                <div key={stat.label} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
+                  <div className={`w-10 h-10 ${stat.bg} ${stat.color} rounded-xl flex items-center justify-center mb-4`}>
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-500">{stat.label}</p>
+                  <h2 className="text-3xl font-bold text-gray-900 mt-1">{stat.value}</h2>
                 </div>
               ))}
-            </section>
-
-            {/* Upcoming Events */}
-            <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-              <h2 className="text-lg font-semibold mb-4">Upcoming Events (Approved)</h2>
-              <div className="space-y-3">
-                {upcomingEvents.length > 0 ? (
-                  upcomingEvents.map((event, index) => (
-                    <div key={index} className="flex justify-between items-center p-4 border rounded-lg hover:bg-gray-50">
-                      <div>
-                        <p className="font-medium">{event.title}</p>
-                        <p className="text-sm text-gray-500">{event.date}</p>
-                      </div>
-                      <span className="px-3 py-1 text-xs rounded-full bg-green-100 text-green-700">
-                        {event.status}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-500 text-center py-4">No upcoming approved events</p>
-                )}
-              </div>
             </div>
 
-            {/* CTA */}
-            <button
-              onClick={() => setActiveSection("create-event")}
-              className="w-full py-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold"
-            >
-              + Create New Event
-            </button>
-          </>
+            {/* Quick Actions Hero */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200/50 flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="text-center md:text-left">
+                <h2 className="text-2xl font-bold mb-2">Ready to host something amazing?</h2>
+                <p className="text-indigo-100 mb-0 opacity-90">Create and submit your event for approval instantly.</p>
+              </div>
+              <button
+                onClick={() => setActiveSection("create-event")}
+                className="bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shrink-0 shadow-lg"
+              >
+                <PlusCircle className="w-5 h-5" />
+                Create New Event
+              </button>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-8">
+              {/* My Events List Preview */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-gray-900">Recent Events</h3>
+                  <button onClick={() => setActiveSection("my-events")} className="text-indigo-600 font-medium text-sm hover:underline flex items-center gap-1">
+                    View All <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="space-y-3">
+                  {events.slice(0, 5).map((event) => (
+                    <div 
+                      key={event._id} 
+                      className="bg-white p-4 rounded-2xl border border-gray-100 flex items-center justify-between hover:border-indigo-100 transition-all group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+                          {event.image ? (
+                            <img src={event.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                <ImageIcon className="w-5 h-5" />
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 line-clamp-1">{event.title}</h4>
+                          <p className="text-xs text-gray-500 mt-0.5">{event.date} • {event.category}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full ${
+                          event.status === "approved" ? "bg-green-50 text-green-600" :
+                          event.status === "rejected" ? "bg-red-50 text-red-600" : "bg-yellow-50 text-yellow-600"
+                        }`}>
+                          {event.status}
+                        </span>
+                        {event.status === "rejected" && (
+                          <button 
+                            onClick={() => handleEditEvent(event)}
+                            className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                            title="Edit & Resubmit"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {events.length === 0 && (
+                     <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200">
+                        <Calendar className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                        <p className="text-gray-400">No events created yet.</p>
+                     </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Notifications Widget */}
+              <div className="space-y-6">
+                 <h3 className="text-xl font-bold text-gray-900">Notifications</h3>
+                 <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="divide-y divide-gray-50">
+                       {recentNotifications.length > 0 ? (
+                         recentNotifications.map((notif) => (
+                           <div key={notif._id} className="p-4 hover:bg-gray-50 transition-colors">
+                              <p className="text-sm font-semibold text-gray-900">{notif.title}</p>
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{notif.message}</p>
+                           </div>
+                         ))
+                       ) : (
+                         <div className="p-8 text-center">
+                            <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+                            <p className="text-xs text-gray-400">No recent notifications</p>
+                         </div>
+                       )}
+                    </div>
+                    <button 
+                      onClick={() => navigate("/notifications")}
+                      className="w-full p-4 text-center text-sm font-bold text-indigo-600 hover:bg-indigo-50 border-t border-gray-50 transition-colors"
+                    >
+                      View All Inbox
+                    </button>
+                 </div>
+              </div>
+            </div>
+          </div>
         )
 
       case "my-events":
         return (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">My Events</h2>
+          <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">Event Portfolio</h2>
+                <p className="text-gray-500 text-sm mt-1">Manage and track your submissions</p>
+              </div>
               <button
                 onClick={() => {
                   setEditingEvent(null)
@@ -306,126 +382,112 @@ export default function OrganizerDashboard() {
                     date: "",
                     time: "",
                     venue: "",
-                    image: ""
+                    image: "",
+                    totalSeats: 100
                   })
                   setBannerPreview("")
                   setActiveSection("create-event")
                 }}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
+                className="px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-bold flex items-center gap-2 shadow-lg shadow-indigo-100"
               >
-                + Create New
+                <PlusCircle className="w-5 h-5" />
+                New Event
               </button>
             </div>
 
-            {/* Status Tabs */}
-            <div className="flex border-b mb-6 overflow-x-auto no-scrollbar">
+            {/* Enhanced Status Tabs */}
+            <div className="flex p-1 bg-gray-100 rounded-2xl w-fit">
               {["all", "pending", "approved", "rejected"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setEventTab(tab)}
-                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
                     eventTab === tab
-                      ? "border-indigo-600 text-indigo-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700"
+                      ? "bg-white text-indigo-600 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
                   }`}
                 >
                   <span className="capitalize">{tab}</span>
-                  <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                    eventTab === tab ? "bg-indigo-100" : "bg-gray-100"
-                  }`}>
-                    {tab === "all" ? events.length : events.filter(e => e.status === tab).length}
-                  </span>
                 </button>
               ))}
             </div>
 
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-600">
-                  <tr>
-                    <th className="p-4 text-left">Event Name</th>
-                    <th className="p-4 text-left">Category / Details</th>
-                    <th className="p-4 text-center">Status</th>
-                    <th className="p-4 text-center">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr><td colSpan="4" className="p-4 text-center py-12">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
-                      <p className="mt-2 text-gray-500">Loading events...</p>
-                    </td></tr>
-                  ) : filteredEvents.length === 0 ? (
-                    <tr><td colSpan="4" className="p-4 text-center py-12 text-gray-500">
-                      No events found in this category.
-                    </td></tr>
-                  ) : (
-                    filteredEvents.map((event) => (
-                      <tr key={event._id} className="border-t hover:bg-gray-50 group">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-16 rounded overflow-hidden bg-gray-100 hidden sm:block">
-                              <img src={event.image || "https://via.placeholder.com/150"} alt="" className="h-full w-full object-cover" />
-                            </div>
-                            <div className="font-medium text-gray-900">{event.title}</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+               {loading ? (
+                 <div className="col-span-full py-20 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+                    <p className="text-gray-500 font-medium">Loading your portfolio...</p>
+                 </div>
+               ) : filteredEvents.length === 0 ? (
+                 <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+                    <Calendar className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg font-medium">No {eventTab !== "all" ? eventTab : ""} events found.</p>
+                 </div>
+               ) : (
+                 filteredEvents.map((event) => (
+                    <div key={event._id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col group">
+                       <div className="h-44 relative overflow-hidden">
+                          <img 
+                            src={event.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800"} 
+                            alt="" 
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                          <div className="absolute top-4 right-4">
+                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${
+                               event.status === "approved" ? "bg-green-500 text-white" :
+                               event.status === "rejected" ? "bg-red-500 text-white" : "bg-amber-500 text-white"
+                             }`}>
+                               {event.status}
+                             </span>
                           </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="text-gray-600 font-medium">{event.category}</div>
-                          <div className="text-gray-400 text-xs">{event.date} • {event.time}</div>
-                        </td>
-                        <td className="p-4 text-center">
-                          <div className="flex flex-col items-center gap-1">
-                            <span
-                              className={`px-3 py-1 text-xs rounded-full inline-flex items-center gap-1.5 ${
-                                event.status === "approved"
-                                  ? "bg-green-100 text-green-700 font-medium"
-                                  : event.status === "rejected"
-                                  ? "bg-red-100 text-red-700 font-medium"
-                                  : "bg-yellow-100 text-yellow-700 font-medium"
-                              }`}
-                            >
-                              <span className={`w-1.5 h-1.5 rounded-full ${
-                                event.status === "approved" ? "bg-green-500" : event.status === "rejected" ? "bg-red-500" : "bg-yellow-500"
-                              }`}></span>
-                              <span className="capitalize">{event.status}</span>
-                            </span>
-                            {event.status === "rejected" && event.rejectionReason && (
-                              <p className="text-[10px] text-red-500 max-w-[150px] leading-tight mt-1">
-                                Reason: {event.rejectionReason}
-                              </p>
-                            )}
+                       </div>
+                       <div className="p-6 flex-1 flex flex-col">
+                          <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">{event.category}</div>
+                          <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">{event.title}</h4>
+                          <div className="space-y-2 mb-6 flex-1">
+                             <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Calendar className="w-4 h-4" />
+                                {new Date(event.date).toLocaleDateString()}
+                             </div>
+                             <div className="flex items-center gap-2 text-sm text-gray-500">
+                                <Clock className="w-4 h-4" />
+                                {event.time}
+                             </div>
                           </div>
-                        </td>
-                        <td className="p-4 text-center">
-                          <div className="flex justify-center gap-2">
-                            <button 
-                              onClick={() => handleEditEvent(event)}
-                              disabled={event.status === "pending"}
-                              className={`p-2 rounded-lg border transition-all ${
-                                event.status === "pending"
-                                  ? "opacity-50 cursor-not-allowed bg-gray-50 text-gray-400"
-                                  : "bg-white text-indigo-600 hover:bg-indigo-50 border-gray-200"
-                              }`}
-                              title={event.status === "pending" ? "Cannot edit while pending approval" : "Edit Event"}
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              className="p-2 rounded-lg border border-gray-200 bg-white text-red-500 hover:bg-red-50 transition-all"
-                              title="Delete Event"
-                            >
-                              Delete
-                            </button>
+
+                          {event.status === "rejected" && event.rejectionReason && (
+                             <div className="mb-4 p-3 bg-red-50 rounded-xl border border-red-100">
+                                <p className="text-[10px] text-red-700 leading-tight">
+                                  <span className="font-bold">Reason:</span> {event.rejectionReason}
+                                </p>
+                             </div>
+                          )}
+
+                          <div className="flex gap-2 mt-auto">
+                             {event.status === "rejected" ? (
+                               <button 
+                                 onClick={() => handleEditEvent(event)}
+                                 className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                               >
+                                  <Edit3 className="w-4 h-4" />
+                                  Edit & Resubmit
+                               </button>
+                             ) : (
+                               <button 
+                                 disabled={event.status === "pending"}
+                                 onClick={() => handleEditEvent(event)}
+                                 className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                               >
+                                  Edit Details
+                               </button>
+                             )}
                           </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                       </div>
+                    </div>
+                 ))
+               )}
             </div>
-          </>
+          </div>
         )
 
       case "create-event":
@@ -616,308 +678,45 @@ export default function OrganizerDashboard() {
           </>
         )
 
-      case "participants":
-        return (
-          <>
-            <h2 className="text-2xl font-bold mb-6">Participants</h2>
-
-            <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-              <label className="block text-sm font-medium mb-2">Select Event</label>
-              <select className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                <option>Web Development Workshop</option>
-                <option>AI & Machine Learning Seminar</option>
-                <option>Hackathon 2025</option>
-                <option>Career Fair 2025</option>
-              </select>
-            </div>
-
-            <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-              <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-gray-600">
-                  <tr>
-                    <th className="p-4 text-left">Name</th>
-                    <th className="p-4 text-left">Email/ID</th>
-                    <th className="p-4 text-left">Registration Date</th>
-                    <th className="p-4 text-center">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {participants.map((participant) => (
-                    <tr key={participant.id} className="border-t hover:bg-gray-50">
-                      <td className="p-4 font-medium">{participant.name}</td>
-                      <td className="p-4 text-gray-600">{participant.email}</td>
-                      <td className="p-4">{participant.registrationDate}</td>
-                      <td className="p-4 text-center">
-                        <span
-                          className={`px-3 py-1 text-xs rounded-full ${
-                            participant.status === "Confirmed"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
-                          {participant.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )
-
-      case "announcements":
-        return (
-          <>
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Announcements</h2>
-              <button
-                onClick={() => setShowAnnouncementModal(true)}
-                className="px-5 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-              >
-                + New Announcement
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              {announcements.map((announcement) => (
-                <div key={announcement.id} className="bg-white rounded-xl border shadow-sm p-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-semibold text-lg">{announcement.title}</h3>
-                    <span className="text-xs text-gray-500">{announcement.date}</span>
-                  </div>
-                  <p className="text-gray-600 mb-3">{announcement.message}</p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <span className="text-gray-500">Linked to:</span>
-                    <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs">
-                      {announcement.event}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )
-
-      case "analytics":
-        return (
-          <>
-            <h2 className="text-2xl font-bold mb-6">Analytics</h2>
-
-            {/* Summary Cards */}
-            <section className="grid sm:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white p-6 rounded-xl border shadow-sm">
-                <p className="text-sm text-gray-500">Total Views</p>
-                <h2 className="text-3xl font-bold mt-2">8,420</h2>
-                <p className="text-xs text-green-600 mt-2">+12% from last month</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border shadow-sm">
-                <p className="text-sm text-gray-500">Registrations</p>
-                <h2 className="text-3xl font-bold mt-2">1,240</h2>
-                <p className="text-xs text-green-600 mt-2">+8% from last month</p>
-              </div>
-              <div className="bg-white p-6 rounded-xl border shadow-sm">
-                <p className="text-sm text-gray-500">Attendance Rate</p>
-                <h2 className="text-3xl font-bold mt-2">87%</h2>
-                <p className="text-xs text-green-600 mt-2">+5% from last month</p>
-              </div>
-            </section>
-
-            {/* Chart Placeholders */}
-            <div className="grid lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-xl border shadow-sm p-6">
-                <h3 className="font-semibold mb-4">Event Views Over Time</h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <p className="text-gray-400">Chart visualization</p>
-                </div>
-              </div>
-              <div className="bg-white rounded-xl border shadow-sm p-6">
-                <h3 className="font-semibold mb-4">Registration by Category</h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <p className="text-gray-400">Chart visualization</p>
-                </div>
-              </div>
-            </div>
-          </>
-        )
-
-      case "settings":
-        return (
-          <>
-            <h2 className="text-2xl font-bold mb-6">Settings</h2>
-
-            {/* Profile Section */}
-            <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-              <h3 className="font-semibold text-lg mb-4">Organizer Profile</h3>
-              <div className="space-y-4">
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Organization Name</label>
-                    <input
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      defaultValue="Coding Club"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Contact Email</label>
-                    <input
-                      type="email"
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      defaultValue="contact@codingclub.edu"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Bio</label>
-                  <textarea
-                    className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    rows={3}
-                    defaultValue="Official student coding club at the university"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Notifications */}
-            <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-              <h3 className="font-semibold text-lg mb-4">Notifications</h3>
-              <div className="space-y-3">
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm">Email notifications for new registrations</span>
-                  <input type="checkbox" defaultChecked className="w-4 h-4 rounded" />
-                </label>
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm">Push notifications for event reminders</span>
-                  <input type="checkbox" defaultChecked className="w-4 h-4 rounded" />
-                </label>
-                <label className="flex items-center justify-between cursor-pointer">
-                  <span className="text-sm">Weekly analytics summary</span>
-                  <input type="checkbox" className="w-4 h-4 rounded" />
-                </label>
-              </div>
-            </div>
-
-            {/* Theme Preference */}
-            <div className="bg-white rounded-xl border shadow-sm p-6 mb-6">
-              <h3 className="font-semibold text-lg mb-4">Theme Preference</h3>
-              <div className="flex gap-4">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="theme" defaultChecked />
-                  <span className="text-sm">Light</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="theme" />
-                  <span className="text-sm">Dark</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="theme" />
-                  <span className="text-sm">System</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Danger Zone */}
-            <div className="bg-red-50 rounded-xl border border-red-200 p-6">
-              <h3 className="font-semibold text-lg text-red-700 mb-2">Danger Zone</h3>
-              <p className="text-sm text-gray-600 mb-4">
-                Once you delete your account, there is no going back. Please be certain.
-              </p>
-              <button className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Delete Account</button>
-            </div>
-          </>
-        )
-
       default:
-        return null
+        return (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-[3rem] border border-gray-100">
+             <LayoutDashboard className="w-16 h-16 text-gray-100 mb-4" />
+             <h3 className="text-xl font-bold text-gray-900">Module Coming Soon</h3>
+             <p className="text-gray-500">This feature is currently under active development.</p>
+             <button 
+               onClick={() => setActiveSection("overview")}
+               className="mt-6 px-6 py-2 bg-indigo-50 text-indigo-600 rounded-xl font-bold hover:bg-indigo-100 transition-colors"
+             >
+               Back to Home
+             </button>
+          </div>
+        )
     }
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto py-4">
       {renderContent()}
 
-      {/* Announcement Modal */}
-      {showAnnouncementModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-lg p-6">
-            <h2 className="text-xl font-bold mb-4">Create Announcement</h2>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">Title</label>
-                <input
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Announcement title"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Message</label>
-                <textarea
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  placeholder="Your announcement message..."
-                  rows={4}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">Linked Event</label>
-                <select className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                  <option>Web Development Workshop</option>
-                  <option>AI & Machine Learning Seminar</option>
-                  <option>Hackathon 2025</option>
-                  <option>Career Fair 2025</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowAnnouncementModal(false)}
-                className="flex-1 py-2 border rounded-lg hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button className="flex-1 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Publish Announcement
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
+      {/* Modern Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-8 text-center shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl text-green-600">🎉</span>
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Submission Successful!</h2>
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              Your event has been submitted and is now under admin review. You can track its status in the "My Events" section.
-            </p>
-            <div className="flex flex-col gap-3">
-              <button
-                onClick={() => {
-                  setShowSuccessModal(false)
-                  setActiveSection("my-events")
-                }}
-                className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
-              >
-                Go to My Events
-              </button>
-              <button
-                onClick={() => {
-                  setShowSuccessModal(false)
-                  setEditingEvent(null)
-                  setActiveSection("create-event")
-                }}
-                className="w-full py-3 bg-white text-gray-700 border border-gray-200 rounded-xl font-bold hover:bg-gray-50 transition-all"
-              >
-                Create Another Event
-              </button>
-            </div>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full text-center shadow-2xl animate-in zoom-in-95 duration-300">
+             <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <CheckCircle2 className="w-10 h-10" />
+             </div>
+             <h2 className="text-2xl font-black text-gray-900 mb-3">Submission Sent!</h2>
+             <p className="text-gray-500 mb-8 font-medium">Your event has been forwarded to campus administrators for review.</p>
+             <button
+               onClick={() => {
+                 setShowSuccessModal(false)
+                 setActiveSection("my-events")
+               }}
+               className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-xl"
+             >
+               Explore My Hub
+             </button>
           </div>
         </div>
       )}

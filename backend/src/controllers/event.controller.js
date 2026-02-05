@@ -69,6 +69,35 @@ exports.getOrganizerEvents = async (req, res) => {
   }
 };
 
+// Get stats for organizer dashboard
+exports.getOrganizerStats = async (req, res) => {
+  try {
+    const counts = await Event.aggregate([
+      { $match: { organizerId: new (require("mongoose").Types.ObjectId)(req.user.id) } },
+      { $group: { _id: "$status", count: { $sum: 1 } } }
+    ]);
+
+    const stats = {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      total: 0
+    };
+
+    counts.forEach(item => {
+      if (stats.hasOwnProperty(item._id)) {
+        stats[item._id] = item.count;
+      }
+      stats.total += item.count;
+    });
+
+    res.json(stats);
+  } catch (error) {
+    console.error("Error fetching organizer stats:", error);
+    res.status(500).json({ error: "Failed to fetch dashboard stats" });
+  }
+};
+
 // Update event (Organizer only, restricted if pending)
 exports.updateEvent = async (req, res) => {
   try {
