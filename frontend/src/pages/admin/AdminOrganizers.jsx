@@ -10,7 +10,7 @@ const AdminOrganizers = () => {
       try {
         const token = localStorage.getItem('token');
         const config = { headers: { Authorization: `Bearer ${token}` } };
-        const res = await axios.get('http://localhost:5000/api/admin/organizers', config);
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/organizers`, config);
         setOrganizers(res.data);
         setLoading(false);
       } catch (error) {

@@ -9,20 +9,21 @@ const eventSchema = new mongoose.Schema({
     enum: ["Tech", "Cultural", "Sports", "Workshops", "Hackathons", "Clubs"]
   },
   date: { type: String, required: true },
-  time: { type: String },
-  location: { type: String, required: true },
+  time: { type: String, required: true },
+  venue: { type: String, required: true },
   image: { type: String },
-  organizer: { 
+  organizerId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: "User",
     required: true
   },
+  organizerName: String,
   status: { 
     type: String, 
-    enum: ["Pending", "Approved", "Rejected"],
-    default: "Pending"
+    enum: ["pending", "approved", "rejected"],
+    default: "pending"
   },
-  rejectionReason: { type: String },
+  rejectionReason: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

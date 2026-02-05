@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom"
 
-export function EventCard({ id, title, category, description, date, location, image }) {
+export function EventCard({ id, title, category, description, date, venue, image }) {
   // Handle relative vs absolute image paths (mock data uses relative)
   const imageUrl = image || "/placeholder.svg";
 
@@ -23,7 +23,7 @@ export function EventCard({ id, title, category, description, date, location, im
           <p className="text-sm text-gray-600 mt-1 line-clamp-2">{description}</p>
 
           <div className="mt-4 text-sm text-gray-500">
-            📅 {date} <br />📍 {location}
+            📅 {date} <br />📍 {venue}
           </div>
 
           <button className="mt-4 w-full py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700 transition">

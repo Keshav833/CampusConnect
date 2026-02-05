@@ -13,7 +13,7 @@ const AdminEventDetail = () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get(`http://localhost:5000/api/admin/event/${id}`, config);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/event/${id}`, config);
       setEvent(res.data);
       setLoading(false);
     } catch (error) {
@@ -30,7 +30,7 @@ const AdminEventDetail = () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.patch(`http://localhost:5000/api/admin/approve/${id}`, {}, config);
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/events/${id}/approve`, {}, config);
       navigate('/admin/pending');
     } catch (error) {
       alert('Failed to approve event');
@@ -43,7 +43,7 @@ const AdminEventDetail = () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.patch(`http://localhost:5000/api/admin/reject/${id}`, { reason }, config);
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/events/${id}/reject`, { reason }, config);
       navigate('/admin/pending');
     } catch (error) {
       alert('Failed to reject event');
@@ -74,7 +74,7 @@ const AdminEventDetail = () => {
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Organizer</h3>
-              <p className="text-lg font-semibold text-zinc-900">{event.organizer?.name} ({event.organizer?.organization || 'Individual'})</p>
+              <p className="text-lg font-semibold text-zinc-900">{event.organizerId?.name || event.organizerName} ({event.organizerId?.organization || 'Individual'})</p>
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Category</h3>
@@ -86,7 +86,7 @@ const AdminEventDetail = () => {
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Venue</h3>
-              <p className="text-lg font-semibold text-zinc-900">{event.location}</p>
+              <p className="text-lg font-semibold text-zinc-900">{event.venue}</p>
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Submitted At</h3>
@@ -99,15 +99,17 @@ const AdminEventDetail = () => {
             <p className="text-zinc-600 leading-relaxed overflow-wrap-anywhere whitespace-pre-wrap">{event.description}</p>
           </div>
 
-          {event.status !== 'Pending' && (
+          {event.status !== 'pending' && (
             <div className="pt-8 border-t border-zinc-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  event.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                  event.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                  event.status === 'rejected' ? 'bg-rose-100 text-rose-700' :
+                  'bg-amber-100 text-amber-700' // Default for pending
                 }`}>
                   Status: {event.status}
                 </span>
-                {event.status === 'Rejected' && event.rejectionReason && (
+                {event.status === 'rejected' && event.rejectionReason && (
                    <span className="text-sm text-zinc-500 italic">“{event.rejectionReason}”</span>
                 )}
               </div>
@@ -115,7 +117,7 @@ const AdminEventDetail = () => {
           )}
         </div>
 
-        {event.status === 'Pending' && (
+        {event.status === 'pending' && (
           <div className="bg-zinc-50 px-8 py-6 border-t border-zinc-100 flex justify-end gap-4 sticky bottom-0">
             <button 
               onClick={handleReject} 

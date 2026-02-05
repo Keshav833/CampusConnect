@@ -17,20 +17,17 @@ import {
   FileText,
   Laptop,
 } from "lucide-react"
-import { useState } from "react"
-import { useParams } from "react-router-dom"
+import axios from "axios"
+import { useEffect, useState } from "react"
+import { useParams, useNavigate } from "react-router-dom"
 
 export default function EventDetails() {
   const { id } = useParams()
-  const [showReminderModal, setShowReminderModal] = useState(false)
-  const [selectedReminder, setSelectedReminder] = useState(null)
-  const [reminderSet, setReminderSet] = useState(false)
-  const [isRegistered, setIsRegistered] = useState(false)
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const navigate = useNavigate()
 
   // In a real app, you would fetch event details by ID here using useEffect
   // For now we use the mock data provided
-  const event = {
+  const mockEvent = {
     id: id,
     title: "Tech Talks 2024: Future of AI in Education",
     tagline: "Learn how AI is transforming the way we learn and teach",
@@ -89,6 +86,43 @@ export default function EventDetails() {
     qrCode: "/event-qr-code.jpg",
   }
 
+  const [event, setEvent] = useState(mockEvent) // Initialize with mock data as fallback
+  const [loading, setLoading] = useState(true)
+  const [showReminderModal, setShowReminderModal] = useState(false)
+  const [selectedReminder, setSelectedReminder] = useState(null)
+  const [reminderSet, setReminderSet] = useState(false)
+  const [isRegistered, setIsRegistered] = useState(false)
+  const [isBookmarked, setIsBookmarked] = useState(false)
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events/${id}`)
+        setEvent(res.data)
+        setLoading(false)
+      } catch (error) {
+        console.error("Error fetching event details:", error)
+        setLoading(false)
+      }
+    }
+    fetchEvent()
+  }, [id])
+
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-pulse flex flex-col items-center">
+         <div className="w-12 h-12 bg-indigo-200 rounded-full mb-4"></div>
+         <div className="h-4 w-32 bg-indigo-100 rounded"></div>
+      </div>
+    </div>
+  )
+  if (!event) return (
+    <div className="min-h-screen flex items-center justify-center flex-col gap-4">
+      <h2 className="text-2xl font-bold text-gray-800">Event not found</h2>
+      <button onClick={() => navigate('/events')} className="text-indigo-600 font-semibold hover:underline">Go back to events</button>
+    </div>
+  )
+
   const handleRegister = () => {
     setIsRegistered(true)
   }
@@ -105,22 +139,21 @@ export default function EventDetails() {
     if (navigator.share) {
       navigator.share({
         title: event.title,
-        text: event.tagline,
+        text: event.description,
         url: window.location.href,
       })
     }
   }
 
   const handleAddToCalendar = () => {
-    // Simple calendar download (ICS format)
     const calendarEvent = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
 SUMMARY:${event.title}
-DTSTART:20241225T180000
-DTEND:20241225T200000
+DTSTART:${event.date.replace(/-/g, '')}T${(event.time || '10:00').replace(':', '')}00
+DTEND:${event.date.replace(/-/g, '')}T${(event.time || '12:00').replace(':', '')}00
 LOCATION:${event.venue}
-DESCRIPTION:${event.tagline}
+DESCRIPTION:${event.description}
 END:VEVENT
 END:VCALENDAR`
     const blob = new Blob([calendarEvent], { type: "text/calendar" })
@@ -140,19 +173,19 @@ END:VCALENDAR`
           <div className="lg:col-span-2 space-y-6">
             <Card className="overflow-hidden">
               <div className="relative h-80">
-                <img src={event.posterImage || "/placeholder.svg"} alt={event.title} className="w-full h-full object-cover" />
+                <img src={event.image || "/placeholder.svg"} alt={event.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
                 <div className="absolute top-4 left-4 flex gap-2">
                   <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/95 backdrop-blur-sm text-sm font-semibold text-indigo-700">
-                    <span className="text-xl">{event.emoji}</span>
+                    <span className="text-xl">📅</span>
                     {event.category}
                   </span>
                   <span
                     className={`px-4 py-2 rounded-full text-sm font-semibold backdrop-blur-sm ${
-                      event.status === "Open"
+                      event.status === "approved"
                         ? "bg-green-500/95 text-white"
-                        : event.status === "Full"
+                        : event.status === "pending"
                           ? "bg-orange-500/95 text-white"
                           : "bg-red-500/95 text-white"
                     }`}
@@ -164,8 +197,7 @@ END:VCALENDAR`
                 <div className="absolute bottom-6 left-6 right-6 text-white">
                   <h1 className="text-3xl md:text-4xl font-bold mb-2 text-balance">{event.title}</h1>
                   <div className="flex items-center gap-2 text-white/90">
-                    <span className="text-2xl">{event.organizerLogo}</span>
-                    <span className="text-lg">{event.organizer}</span>
+                    <span className="text-lg">{event.organizerName}</span>
                   </div>
                 </div>
               </div>

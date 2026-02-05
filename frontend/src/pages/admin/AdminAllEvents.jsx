@@ -16,7 +16,7 @@ const AdminAllEvents = () => {
         headers: { Authorization: `Bearer ${token}` },
         params: filters
       };
-      const res = await axios.get('http://localhost:5000/api/admin/all', config);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/all`, config);
       setEvents(res.data);
       setLoading(false);
     } catch (error) {
@@ -35,9 +35,9 @@ const AdminAllEvents = () => {
 
   const getStatusClass = (status) => {
     switch (status) {
-      case 'Pending': return 'bg-amber-100 text-amber-700';
-      case 'Approved': return 'bg-emerald-100 text-emerald-700';
-      case 'Rejected': return 'bg-rose-100 text-rose-700';
+      case 'pending': return 'bg-amber-100 text-amber-700';
+      case 'approved': return 'bg-emerald-100 text-emerald-700';
+      case 'rejected': return 'bg-rose-100 text-rose-700';
       default: return 'bg-zinc-100 text-zinc-700';
     }
   };
@@ -56,9 +56,9 @@ const AdminAllEvents = () => {
             className="px-3 py-2 bg-white border border-zinc-200 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-500"
           >
             <option value="">All Statuses</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
           </select>
           <select 
             name="category" 
@@ -93,7 +93,7 @@ const AdminAllEvents = () => {
                 events.map(event => (
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-600">{event.organizer?.organization || event.organizer?.name}</td>
+                    <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusClass(event.status)}`}>
                         {event.status}

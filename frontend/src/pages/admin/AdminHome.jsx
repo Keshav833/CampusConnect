@@ -19,8 +19,8 @@ const AdminHome = () => {
         const config = { headers: { Authorization: `Bearer ${token}` } };
         
         const [statsRes, pendingRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/admin/stats', config),
-          axios.get('http://localhost:5000/api/admin/pending', config)
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/stats`, config),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/events/pending`, config)
         ]);
 
         setStats(statsRes.data);
@@ -79,7 +79,7 @@ const AdminHome = () => {
                 pendingPreview.map(event => (
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-600">{event.organizer?.organization || event.organizer?.name}</td>
+                    <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{new Date(event.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-sm text-right">
                       <Link to={`/admin/event/${event._id}`} className="text-zinc-400 hover:text-zinc-900 font-medium transition-colors">

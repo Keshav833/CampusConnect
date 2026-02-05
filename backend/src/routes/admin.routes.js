@@ -9,11 +9,11 @@ router.use(authMiddleware);
 router.use(roleMiddleware("admin"));
 
 router.get("/stats", adminController.getDashboardStats);
-router.get("/pending", adminController.getPendingEvents);
+router.get("/events/pending", adminController.getPendingEvents);
 router.get("/all", adminController.getAllEvents);
 router.get("/organizers", adminController.getOrganizers);
-router.get("/event/:id", adminController.getEventDetail);
-router.patch("/approve/:id", adminController.approveEvent);
-router.patch("/reject/:id", adminController.rejectEvent);
+router.get("/event/:eventId", adminController.getEventDetail);
+router.patch("/events/:eventId/approve", adminController.approveEvent);
+router.patch("/events/:eventId/reject", adminController.rejectEvent);
 
 module.exports = router;

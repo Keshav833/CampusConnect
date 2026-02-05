@@ -100,7 +100,7 @@ export default function Events() {
                   category={event.category}
                   description={event.description}
                   date={event.date}
-                  location={event.location}
+                  venue={event.venue}
                   image={event.image}
                 />
               ))}

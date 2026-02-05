@@ -10,7 +10,7 @@ const AdminPendingEvents = () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      const res = await axios.get('http://localhost:5000/api/admin/pending', config);
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/admin/events/pending`, config);
       setEvents(res.data);
       setLoading(false);
     } catch (error) {
@@ -27,7 +27,7 @@ const AdminPendingEvents = () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.patch(`http://localhost:5000/api/admin/approve/${id}`, {}, config);
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/events/${id}/approve`, {}, config);
       fetchPending(); // Refresh list
     } catch (error) {
       alert('Failed to approve event');
@@ -41,7 +41,7 @@ const AdminPendingEvents = () => {
     try {
       const token = localStorage.getItem('token');
       const config = { headers: { Authorization: `Bearer ${token}` } };
-      await axios.patch(`http://localhost:5000/api/admin/reject/${id}`, { reason }, config);
+      await axios.patch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/events/${id}/reject`, { reason }, config);
       fetchPending(); // Refresh list
     } catch (error) {
       alert('Failed to reject event');
@@ -74,7 +74,7 @@ const AdminPendingEvents = () => {
                 events.map(event => (
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-600">{event.organizer?.organization || event.organizer?.name}</td>
+                    <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">
                       <span className="px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-xs font-medium">
                         {event.category}
