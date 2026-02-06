@@ -81,20 +81,62 @@ exports.checkRegistrationStatus = async (req, res) => {
 // Get all registrations for logged in student
 exports.getMyRegistrations = async (req, res) => {
   try {
-    const registrations = await Registration.find({ studentId: req.user.id })
-      .populate("eventId")
-      .sort({ registeredAt: -1 });
+    const studentId = new (require("mongoose").Types.ObjectId)(req.user.id);
+    
+    const registrations = await Registration.aggregate([
+      { $match: { studentId } },
+      {
+        $lookup: {
+          from: "events",
+          localField: "eventId",
+          foreignField: "_id",
+          as: "event"
+        }
+      },
+      { $unwind: "$event" },
+      {
+        $lookup: {
+          from: "registrations",
+          localField: "eventId",
+          foreignField: "eventId",
+          as: "eventRegistrations"
+        }
+      },
+      {
+        $addFields: {
+          registeredCount: {
+            $size: {
+              $filter: {
+                input: "$eventRegistrations",
+                as: "reg",
+                cond: { $eq: ["$$reg.status", "registered"] }
+              }
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          registrationId: "$_id",
+          status: 1,
+          registeredAt: 1,
+          registeredCount: 1,
+          title: "$event.title",
+          description: "$event.description",
+          category: "$event.category",
+          date: "$event.date",
+          time: "$event.time",
+          venue: "$event.venue",
+          image: "$event.image",
+          organizerName: "$event.organizerName",
+          totalSeats: "$event.totalSeats",
+          eventId: "$event._id"
+        }
+      },
+      { $sort: { registeredAt: -1 } }
+    ]);
 
-    const formatted = registrations
-      .filter(reg => reg.eventId)
-      .map(reg => ({
-        registrationId: reg._id,
-        status: reg.status,
-        registeredAt: reg.registeredAt,
-        ...reg.eventId._doc
-      }));
-
-    res.json(formatted);
+    res.json(registrations);
   } catch (error) {
     console.error("Error fetching my registrations:", error);
     res.status(500).json({ message: "Failed to fetch registrations" });

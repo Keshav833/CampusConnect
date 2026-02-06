@@ -1,115 +1,160 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { EventCard } from "@/components/EventCard"
+import { EventControlBar } from "@/components/EventControlBar"
+import { useTranslation } from "react-i18next"
+import { Loader2, Calendar } from "lucide-react"
 import axios from "axios"
 
 export default function Events() {
+  const { t } = useTranslation()
   const [events, setEvents] = useState([])
+  const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState("")
+  const [activeTab, setActiveTab] = useState("upcoming")
   const [selectedCategory, setSelectedCategory] = useState("All")
-  const [dateFilter, setDateFilter] = useState("All Dates")
+  const [dateFilter, setDateFilter] = useState("all")
+  const [view, setView] = useState("grid")
 
   const categories = ["All", "Tech", "Cultural", "Sports", "Workshops", "Hackathons", "Clubs"]
 
+  const tabs = [
+    { id: "upcoming", label: t("student.myEvents.upcoming") || "Upcoming Events" },
+    { id: "registered", label: t("student.myEvents.title") || "My Registered Events" },
+    { id: "past", label: t("student.myEvents.past") || "Past Events" }
+  ]
+
   useEffect(() => {
-    // Fetch events from backend
-    axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events`)
-      .then(res => {
-        setEvents(res.data)
-        setLoading(false)
-      })
-      .catch(err => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        const [eventsRes, regsRes] = await Promise.all([
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events`),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/registrations/my`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }).catch(() => ({ data: [] }))
+        ])
+
+        if (Array.isArray(eventsRes.data)) {
+          setEvents(eventsRes.data)
+        }
+        if (Array.isArray(regsRes.data)) {
+          setRegistrations(regsRes.data)
+        }
+      } catch (err) {
         console.error("Error fetching events:", err)
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+    fetchData()
   }, [])
 
-  const filteredEvents = events.filter((event) => {
-    const matchesSearch =
-      event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      event.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredEvents = useMemo(() => {
+    if (!Array.isArray(events)) return []
 
-    const matchesCategory = selectedCategory === "All" || event.category === selectedCategory
+    let result = []
+    const now = new Date().setHours(0, 0, 0, 0)
 
-    // Date filter logic can be expanded here
-    const matchesDate = dateFilter === "All Dates" // Placeholder for now
+    // 1. Tab Filtering
+    if (activeTab === "upcoming") {
+      result = events.filter(e => new Date(e.date) >= now)
+    } else if (activeTab === "registered") {
+      const registeredIds = new Set(registrations.map(r => r.eventId))
+      result = events.filter(e => registeredIds.has(e._id || e.id))
+    } else if (activeTab === "past") {
+      result = events.filter(e => new Date(e.date) < now)
+    }
 
-    return matchesSearch && matchesCategory && matchesDate
-  })
+    // 2. Category Filtering
+    if (selectedCategory !== "All") {
+      result = result.filter(e => e.category === selectedCategory)
+    }
+
+    // 3. Date Filtering
+    if (dateFilter !== "all") {
+      const today = new Date()
+      today.setHours(0, 0, 0, 0)
+      
+      result = result.filter(e => {
+        const eventDate = new Date(e.date)
+        if (dateFilter === "today") {
+          return eventDate.getTime() === today.getTime()
+        }
+        if (dateFilter === "week") {
+          const weekEnd = new Date(today)
+          weekEnd.setDate(today.getDate() + 7)
+          return eventDate >= today && eventDate <= weekEnd
+        }
+        if (dateFilter === "month") {
+          return eventDate.getMonth() === today.getMonth() && eventDate.getFullYear() === today.getFullYear()
+        }
+        return true
+      })
+    }
+
+    return result
+  }, [events, registrations, activeTab, selectedCategory, dateFilter])
+
+  const counts = useMemo(() => {
+    const now = new Date().setHours(0, 0, 0, 0)
+    return {
+      upcoming: events.filter(e => new Date(e.date) >= now).length,
+      registered: registrations.length,
+      past: events.filter(e => new Date(e.date) < now).length
+    }
+  }, [events, registrations])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-[1600px]  ">
+        
+        {/* Top Control Bar */}
+        <EventControlBar 
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          dateFilter={dateFilter}
+          onDateFilterChange={setDateFilter}
+          view={view}
+          onViewChange={setView}
+          counts={counts}
+        />
 
-      {/* Search + Filters */}
-      <section className="px-8 py-6">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-4">
-          <input
-            type="text"
-            placeholder="Search events, clubs, workshops..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-
-          <select
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-            className="px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option>All Dates</option>
-            <option>Today</option>
-            <option>This Week</option>
-            <option>This Month</option>
-          </select>
-        </div>
-      </section>
-
-      {/* Category Pills */}
-      <section className="px-8 pb-6">
-        <div className="max-w-6xl mx-auto flex gap-3 overflow-x-auto">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 border rounded-full text-sm transition whitespace-nowrap ${
-                selectedCategory === cat
-                  ? "bg-indigo-600 text-white border-indigo-600"
-                  : "hover:bg-indigo-600 hover:text-white"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* Events Grid */}
-      <section className="px-8 py-10">
-        <div className="max-w-6xl mx-auto">
-          {loading ? (
-             <div className="text-center py-20 text-gray-500">Loading events...</div>
-          ) : filteredEvents.length === 0 ? (
-             <div className="text-center py-20 text-gray-500">No events found matching your criteria.</div>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEvents.map((event) => (
-                <EventCard
-                  key={event._id || event.id}
-                  id={event._id || event.id}
-                  title={event.title}
-                  category={event.category}
-                  description={event.description}
-                  date={event.date}
-                  time={event.time}
-                  venue={event.venue}
-                  image={event.image}
-                  organizerName={event.organizerName}
-                />
-              ))}
+        {/* Content Section */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-32 space-y-4">
+            <Loader2 className="w-12 h-12 animate-spin text-indigo-600" />
+            <p className="text-gray-400 font-medium animate-pulse">{t("student.events.loading")}</p>
+          </div>
+        ) : filteredEvents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-32 bg-gray-50/50 rounded-[2.5rem] border border-dashed border-gray-200 animate-in fade-in duration-700">
+            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+               <Calendar className="w-10 h-10 text-gray-300" />
             </div>
-          )}
-        </div>
-      </section>
+            <h3 className="text-xl font-bold text-gray-900">{t("student.events.noResults")}</h3>
+            <p className="text-gray-500 mt-2 max-w-xs text-center">{t("student.events.tryDifferentFilter") || "Try adjusting your filters to find more events."}</p>
+          </div>
+        ) : (
+          <div className={`animate-in fade-in slide-in-from-bottom-4 duration-700 ${
+            view === "grid" 
+              ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8 md:gap-10" 
+              : "flex flex-col gap-4"
+          }`}>
+            {filteredEvents.map((event) => (
+              <div key={event._id || event.id} className={view === "list" ? "w-full" : ""}>
+                <EventCard
+                  {...event}
+                  id={event._id || event.id}
+                  view={view}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

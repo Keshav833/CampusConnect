@@ -2,11 +2,34 @@ const User = require("../models/User");
 const Event = require("../models/Event");
 const Registration = require("../models/Registration");
 const jwt = require("jsonwebtoken");
+const translateText = require("../services/lingoTranslate");
 
 // Get only approved events (for students/public)
 exports.getEvents = async (req, res) => {
   try {
-    const events = await Event.find({ status: "approved" }).sort({ date: 1 });
+    const events = await Event.aggregate([
+      { $match: { status: "approved" } },
+      {
+        $lookup: {
+          from: "registrations",
+          let: { eventId: "$_id" },
+          pipeline: [
+            { $match: { $expr: { $and: [
+              { $eq: ["$eventId", "$$eventId"] },
+              { $eq: ["$status", "registered"] }
+            ] } } }
+          ],
+          as: "registrations"
+        }
+      },
+      {
+        $addFields: {
+          registeredCount: { $size: "$registrations" }
+        }
+      },
+      { $project: { registrations: 0 } },
+      { $sort: { date: 1 } }
+    ]);
     res.json(events);
   } catch (error) {
     console.error("Error fetching events:", error);
@@ -20,8 +43,23 @@ exports.createEvent = async (req, res) => {
     const organizer = await User.findById(req.user.id);
     if (!organizer) return res.status(404).json({ error: "User not found" });
 
+    const { description } = req.body;
+
+    // Translate description
+    const [hi, mr, ta] = await Promise.all([
+      translateText(description, "hi"),
+      translateText(description, "mr"),
+      translateText(description, "ta"),
+    ]);
+
     const event = await Event.create({
       ...req.body,
+      description: {
+        en: description,
+        hi,
+        mr,
+        ta,
+      },
       organizerId: organizer._id,
       organizerName: organizer.name,
       status: "pending",
@@ -120,6 +158,21 @@ exports.updateEvent = async (req, res) => {
       status: "pending",
       rejectionReason: null // Clear reason on resubmission
     };
+
+    // Re-translate if description changed
+    if (req.body.description && req.body.description !== event.description.en) {
+      const [hi, mr, ta] = await Promise.all([
+        translateText(req.body.description, "hi"),
+        translateText(req.body.description, "mr"),
+        translateText(req.body.description, "ta"),
+      ]);
+      updatedData.description = {
+        en: req.body.description,
+        hi,
+        mr,
+        ta,
+      };
+    }
 
     const updatedEvent = await Event.findByIdAndUpdate(req.params.id, updatedData, { new: true });
     res.json({ message: "Event resubmitted successfully", event: updatedEvent });

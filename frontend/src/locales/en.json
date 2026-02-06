@@ -1,0 +1,289 @@
+{
+  "common": {
+    "discover": "Discover Events",
+    "register": "Register Now",
+    "dashboard": "Dashboard",
+    "myEvents": "My Events",
+    "profile": "Profile",
+    "logout": "Logout",
+    "createEvent": "Create New Event",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "notifications": "Notifications",
+    "welcome": "Welcome back",
+    "eventDetails": "Event Details",
+    "joinedBy": "Joined by {{count}}+ students",
+    "forStudents": "For Students",
+    "forOrganizers": "For Organizers",
+    "heroList": ["One Verified Platform", "Connect with Peers", "Discover Opportunities"],
+    "categories": {
+      "all": "All Categories",
+      "technical": "Technical",
+      "cultural": "Cultural",
+      "sports": "Sports",
+      "academic": "Academic",
+      "workshops": "Workshops",
+      "hackathons": "Hackathons",
+      "clubs": "Clubs"
+    }
+  },
+  "landing": {
+    "heroTitle": "Connect with Your Campus",
+    "heroSubtitle": "The all-in-one platform for campus events, workshops, and networking.",
+    "cta": "Get Started",
+    "featuresTitle": "One Platform, Endless Possibilities",
+    "featuresSubtitle": "Everything you need to navigate campus life, all in one verified place.",
+    "feature1Title": "Discover Events",
+    "feature1Desc": "Smart filters and real-time search to find exactly what interests you.",
+    "feature2Title": "Easy Registration",
+    "feature2Desc": "One-tap registration and instant QR passes for seamless entry.",
+    "feature3Title": "Smart Reminders",
+    "feature3Desc": "Never miss an event with personalized push and email notifications.",
+    "feature4Title": "Verified History",
+    "feature4Desc": "Track your participation and access all your event certificates in one place.",
+    "studentsTitle": "Enhance your campus experience",
+    "studentsSubtitle": "Stay updated with everything happening on campus. From technical hackathons to cultural fests, Campus Connect is your key to an active student life.",
+    "studentsList": ["Verified events from official clubs", "Instant event certificates", "Networking with like-minded peers"],
+    "organizersTitle": "Manage events with precision",
+    "organizersSubtitle": "Empower your club or organization with a professional management dashboard. Track registrations, verify attendance, and issue certificates automatically.",
+    "organizersGrid": [
+      { "label": "Analytics", "desc": "Real-time data" },
+      { "label": "Security", "desc": "Verified entry" },
+      { "label": "Scaling", "desc": "5000+ capacity" },
+      { "label": "Automation", "desc": "Auto-certs" }
+    ],
+    "howItWorksTitle": "How it works",
+    "howItWorksSubtitle": "Get started in three simple steps",
+    "steps": [
+      { "title": "Explore", "desc": "Browse official campus events with live updates and smart filters." },
+      { "title": "Register", "desc": "Secure your spot instantly and receive your digital entry pass." },
+      { "title": "Experience", "desc": "Attend the event, get verified, and access your certificates." }
+    ],
+    "ctaTitle": "Ready to dive in?",
+    "ctaButton": "Get Started Now",
+    "footerDesc": "Your one-stop platform for discovering and managing all campus events.",
+    "allRights": "All rights reserved."
+  },
+  "student": {
+    "events": {
+      "title": "Discover Events",
+      "searchPlaceholder": "Search events, clubs, workshops...",
+      "allDates": "All Dates",
+      "today": "Today",
+      "thisWeek": "This Week",
+      "thisMonth": "This Month",
+      "loading": "Loading events...",
+      "noResults": "No events found matching your criteria."
+    },
+    "myEvents": {
+      "title": "My Registered Events",
+      "searchPlaceholder": "Search registered events...",
+      "upcoming": "Upcoming Events",
+      "past": "Past Events",
+      "noRegistrations": "No events found matching your filters",
+      "browseAll": "Browse all events",
+      "viewDetails": "View Details"
+    },
+    "profile": {
+      "editProfile": "Edit Profile",
+      "accountInfo": "Account Information",
+      "emailId": "Email ID",
+      "studentId": "Student ID",
+      "contactNumber": "Contact Number",
+      "preferences": "Preferences",
+      "eventCategories": "Preferred Event Categories",
+      "language": "Language",
+      "notifications": "Notification Preferences",
+      "enableAll": "Enable all notifications",
+      "reminders": "Event reminders",
+      "updates": "Event updates & announcements",
+      "quickAccess": "Quick Access",
+      "savedEvents": "Saved / Bookmarked Events",
+      "certificatesHistory": "Certificates & Participation History",
+      "supportSettings": "Support & Settings",
+      "helpFaqs": "Help & FAQs",
+      "contactSupport": "Contact Support",
+      "feedbackReport": "Feedback / Report an Issue",
+      "privacySecurity": "Privacy & Security"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "subtitle": "Stay updated with your activities",
+      "markAllRead": "Mark all as read",
+      "noNotifications": "No notifications yet"
+    },
+    "eventDetails": {
+      "aboutEvent": "About Event",
+      "organizedBy": "Organized by",
+      "eventDate": "Event Date",
+      "startsAt": "Starts At",
+      "venueLocation": "Venue Location",
+      "studentsRegistered": "Students already registered",
+      "spotsLeft": "spots left!",
+      "eventFull": "Event is full.",
+      "reminder": "Reminder",
+      "register": "Register for Event",
+      "registered": "Registered ✓",
+      "processing": "Processing...",
+      "eventCompleted": "Event Completed",
+      "successTitle": "You’re registered!",
+      "successText": "We've added this event to your events. See you there!",
+      "viewMyEvents": "View My Events",
+      "backToDetails": "Back to Details"
+    },
+    "feedback": {
+      "title": "Share Your Feedback",
+      "subtitle": "Help us improve Campus Connect with your suggestions",
+      "experienceRating": "How would you rate your experience?",
+      "relatedEvent": "Related Event (Optional)",
+      "yourFeedback": "Your Feedback",
+      "placeholder": "Share your thoughts, suggestions, or report any issues...",
+      "submit": "Submit Feedback",
+      "thankYou": "Thank You!",
+      "thankYouDesc": "Your feedback helps us make Campus Connect better for everyone."
+    },
+    "certificates": {
+      "title": "My Certificates",
+      "subtitle": "Download certificates for events you've attended",
+      "searchPlaceholder": "Search by event name...",
+      "download": "Download",
+      "noCertificates": "No certificates found"
+    }
+  },
+  "organizer": {
+    "dashboard": {
+      "title": "Organizer Hub",
+      "subtitle": "Overview of your club's activities",
+      "stats": {
+        "pending": "Pending Approval",
+        "approved": "Approved Events",
+        "rejected": "Rejected Events",
+        "total": "Total Submissions"
+      },
+      "ctaTitle": "Ready to host something amazing?",
+      "ctaSubtitle": "Create and submit your event for approval instantly.",
+      "createNew": "Create New Event",
+      "recentEvents": "Recent Events",
+      "viewAll": "View All",
+      "noEvents": "No events created yet."
+    },
+    "myEvents": {
+      "title": "Event Portfolio",
+      "subtitle": "Manage and track your submissions",
+      "newEvent": "New Event",
+      "tabs": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "loading": "Loading your portfolio...",
+      "noEvents": "No {{status}} events found.",
+      "editResubmit": "Edit & Resubmit",
+      "editDetails": "Edit Details",
+      "rejectionReason": "Rejection Reason"
+    },
+    "createEvent": {
+      "title": "Create New Event",
+      "editTitle": "Edit & Resubmit Event",
+      "form": {
+        "title": "Event Title",
+        "titlePlaceholder": "e.g., Web Development Workshop",
+        "description": "Description",
+        "descriptionPlaceholder": "Tell students about your event...",
+        "category": "Category",
+        "venue": "Venue / Location",
+        "venuePlaceholder": "e.g., Main Auditorium",
+        "date": "Date",
+        "time": "Time",
+        "banner": "Event Banner Image",
+        "uploadFile": "Upload a file",
+        "dragDrop": "or drag and drop",
+        "bannerHint": "PNG, JPG, WEBP up to 5MB",
+        "imageUrl": "Or use Image URL",
+        "imageUrlPlaceholder": "https://example.com/image.jpg"
+      },
+      "actions": {
+        "cancel": "Cancel",
+        "submit": "Submit for Approval",
+        "update": "Update & Resubmit"
+      },
+      "successTitle": "Submission Sent!",
+      "successSubtitle": "Your event has been forwarded to campus administrators for review.",
+      "successCta": "Explore My Hub"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Control Center",
+      "subtitle": "Overview of campus-wide activities",
+      "stats": {
+        "pending": "Pending Events",
+        "approved": "Approved Events",
+        "rejected": "Rejected Events",
+        "totalOrganizers": "Total Organizers"
+      },
+      "pendingPreview": "Pending Events (Preview)",
+      "viewAll": "View All",
+      "noPending": "All clear! No pending events.",
+      "table": {
+        "title": "Event Title",
+        "organizer": "Organizer",
+        "date": "Date",
+        "action": "Action",
+        "view": "View"
+      }
+    },
+    "pending": {
+      "title": "Review Submissions",
+      "subtitle": "Approve or reject pending event requests",
+      "empty": "No items waiting in the review queue."
+    },
+    "organizers": {
+      "title": "Campus Organizers",
+      "subtitle": "Manage official clubs and department accounts",
+      "searchPlaceholder": "Search by organization or name...",
+      "addOrganizer": "Add Organizer",
+      "empty": "No organizers found.",
+      "table": {
+        "name": "Name",
+        "organization": "Organization",
+        "email": "Email",
+        "totalEvents": "Total Events",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      }
+    },
+    "eventReview": {
+      "title": "Submission Review",
+      "subtitle": "Verify event details before approval",
+      "approve": "Approve Event",
+      "reject": "Reject Event",
+      "rejectionPlaceholder": "Explain why this was rejected (sent to organizer)...",
+      "confirmApprove": "Event Approved Successfully",
+      "confirmReject": "Event Rejected Successfully",
+      "fields": {
+        "title": "Event Title",
+        "organizer": "Organizer",
+        "category": "Category",
+        "dateTime": "Date & Time",
+        "venue": "Venue",
+        "submittedAt": "Submitted At",
+        "description": "Description",
+        "status": "Status"
+      },
+      "errorApprove": "Failed to approve event",
+      "errorReject": "Failed to reject event"
+    },
+    "allEvents": {
+      "title": "All Events",
+      "subtitle": "Monitor all campus activities in one place",
+      "filters": {
+        "allStatuses": "All Statuses",
+        "allCategories": "All Categories",
+        "noResults": "No events found matching your filters."
+      }
+    }
+  }
+}

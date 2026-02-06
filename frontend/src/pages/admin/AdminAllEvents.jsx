@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const AdminAllEvents = () => {
+  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -42,12 +44,15 @@ const AdminAllEvents = () => {
     }
   };
 
-  if (loading) return <div>Loading events...</div>;
+  if (loading) return <div className="p-8 text-center text-zinc-500 font-medium">{t("common.loading")}</div>;
 
   return (
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-2xl font-bold">All Events</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-zinc-900">{t("admin.allEvents.title")}</h2>
+          <p className="text-zinc-500 mt-1">{t("admin.allEvents.subtitle")}</p>
+        </div>
         <div className="flex gap-2">
           <select 
             name="status" 
@@ -55,10 +60,10 @@ const AdminAllEvents = () => {
             onChange={handleFilterChange} 
             className="px-3 py-2 bg-white border border-zinc-200 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-500"
           >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="approved">Approved</option>
-            <option value="rejected">Rejected</option>
+            <option value="">{t("admin.allEvents.filters.allStatuses")}</option>
+            <option value="pending">{t("organizer.myEvents.tabs.pending")}</option>
+            <option value="approved">{t("organizer.myEvents.tabs.approved")}</option>
+            <option value="rejected">{t("organizer.myEvents.tabs.rejected")}</option>
           </select>
           <select 
             name="category" 
@@ -66,13 +71,13 @@ const AdminAllEvents = () => {
             onChange={handleFilterChange} 
             className="px-3 py-2 bg-white border border-zinc-200 rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-zinc-500"
           >
-            <option value="">All Categories</option>
-            <option value="Tech">Tech</option>
-            <option value="Cultural">Cultural</option>
-            <option value="Sports">Sports</option>
-            <option value="Workshops">Workshops</option>
-            <option value="Hackathons">Hackathons</option>
-            <option value="Clubs">Clubs</option>
+            <option value="">{t("admin.allEvents.filters.allCategories")}</option>
+            <option value="Tech">{t("common.categories.technical")}</option>
+            <option value="Cultural">{t("common.categories.cultural")}</option>
+            <option value="Sports">{t("common.categories.sports")}</option>
+            <option value="Workshops">{t("common.categories.workshops")}</option>
+            <option value="Hackathons">{t("common.categories.hackathons")}</option>
+            <option value="Clubs">{t("common.categories.clubs")}</option>
           </select>
         </div>
       </header>
@@ -82,10 +87,10 @@ const AdminAllEvents = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Event Title</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Organizer</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.title")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.organizer")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("organizer.myEvents.tabs.all")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.date")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
@@ -96,7 +101,7 @@ const AdminAllEvents = () => {
                     <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusClass(event.status)}`}>
-                        {event.status}
+                        {t(`organizer.myEvents.tabs.${event.status}`)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{new Date(event.date).toLocaleDateString()}</td>
@@ -104,8 +109,8 @@ const AdminAllEvents = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-10 text-center text-zinc-500 text-sm italic">
-                    No events found matching your filters.
+                  <td colSpan="4" className="px-6 py-10 text-center text-zinc-500 text-sm italic font-medium">
+                    {t("admin.allEvents.filters.noResults")}
                   </td>
                 </tr>
               )}

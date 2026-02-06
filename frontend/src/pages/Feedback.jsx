@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Star } from "lucide-react"
+import { Star, Send } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 export default function Feedback() {
+  const { t } = useTranslation()
   const [rating, setRating] = useState(0)
   const [hoveredRating, setHoveredRating] = useState(0)
   const [selectedEvent, setSelectedEvent] = useState("")
@@ -26,60 +28,68 @@ export default function Feedback() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="max-w-3xl mx-auto">
+      <div className="mb-10 text-center">
+        <h1 className="text-4xl font-extrabold text-gray-900 mb-3 tracking-tight">{t("student.feedback.title")}</h1>
+        <p className="text-gray-500 font-medium text-lg">{t("student.feedback.subtitle")}</p>
+      </div>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Share Your Feedback</h1>
-          <p className="text-muted-foreground">Help us improve Campus Connect with your suggestions</p>
-        </div>
-
-        <Card className="p-8">
-          {submitted ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">Thank You!</h3>
-              <p className="text-muted-foreground">Your feedback helps us make Campus Connect better for everyone.</p>
+      <Card className="p-10 border-gray-100 shadow-xl shadow-indigo-100/30 rounded-3xl relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-500" />
+        
+        {submitted ? (
+          <div className="text-center py-12 animate-in fade-in zoom-in duration-500">
+            <div className="w-20 h-20 rounded-3xl bg-green-50 flex items-center justify-center mx-auto mb-6 text-4xl">
+              ✨
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <Label className="text-foreground mb-3 block">How would you rate your experience?</Label>
-                <div className="flex gap-2 justify-center">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => setRating(star)}
-                      onMouseEnter={() => setHoveredRating(star)}
-                      onMouseLeave={() => setHoveredRating(0)}
-                      className="transition-transform hover:scale-110"
-                    >
-                      <Star
-                        className={`w-10 h-10 ${
-                          star <= (hoveredRating || rating) ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">{t("student.feedback.successTitle")}</h3>
+            <p className="text-gray-500 leading-relaxed max-w-sm mx-auto">
+              {t("student.feedback.successText")}
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="text-center">
+              <Label className="text-base font-bold text-gray-700 mb-6 block uppercase tracking-widest">
+                {t("student.feedback.experienceRating")}
+              </Label>
+              <div className="flex gap-3 justify-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoveredRating(star)}
+                    onMouseLeave={() => setHoveredRating(0)}
+                    className="transition-all duration-300 hover:scale-125 active:scale-90"
+                  >
+                    <Star
+                      className={`w-12 h-12 transition-all duration-300 ${
+                        star <= (hoveredRating || rating) 
+                          ? "fill-amber-400 text-amber-400 drop-shadow-[0_0_10px_rgba(251,191,36,0.5)]" 
+                          : "text-gray-200"
+                      }`}
+                    />
+                  </button>
+                ))}
               </div>
+              <p className="mt-4 text-sm font-bold text-indigo-500 min-h-[20px]">
+                {rating > 0 && (rating === 5 ? "Loved it! ❤️" : rating >= 4 ? "Great Experience! 😊" : rating >= 3 ? "It was okay. 👍" : "Could be better. 🧐")}
+              </p>
+            </div>
 
-              <div>
-                <Label htmlFor="event" className="text-foreground">
-                  Related Event (Optional)
+            <div className="grid grid-cols-1 gap-8">
+              <div className="space-y-3">
+                <Label htmlFor="event" className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                  {t("student.feedback.relatedEvent")}
                 </Label>
                 <select
                   id="event"
                   value={selectedEvent}
                   onChange={(e) => setSelectedEvent(e.target.value)}
-                  className="w-full px-3 py-2 border border-input rounded-lg bg-background text-foreground"
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-500/5 transition-all text-sm font-semibold"
                 >
-                  <option value="">Select an event</option>
+                  <option value="">{t("student.feedback.selectEvent")}</option>
                   {events.map((event) => (
                     <option key={event} value={event}>
                       {event}
@@ -88,27 +98,29 @@ export default function Feedback() {
                 </select>
               </div>
 
-              <div>
-                <Label htmlFor="feedback" className="text-foreground">
-                  Your Feedback
+              <div className="space-y-3">
+                <Label htmlFor="feedback" className="text-sm font-bold text-gray-500 uppercase tracking-wider">
+                  {t("student.feedback.yourFeedback")}
                 </Label>
                 <Textarea
                   id="feedback"
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  placeholder="Share your thoughts, suggestions, or report any issues..."
-                  rows={8}
+                  placeholder={t("student.feedback.placeholder")}
+                  rows={6}
                   required
+                  className="w-full px-4 py-3 bg-gray-50 border border-transparent rounded-2xl focus:outline-none focus:bg-white focus:border-indigo-100 focus:ring-4 focus:ring-indigo-500/5 transition-all text-sm font-medium leading-relaxed resize-none"
                 />
               </div>
+            </div>
 
-              <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-                Submit Feedback
-              </Button>
-            </form>
-          )}
-        </Card>
-      </main>
+            <Button type="submit" className="w-full py-7 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-xl shadow-indigo-100 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
+              <Send className="w-5 h-5" />
+              {t("student.feedback.submit")}
+            </Button>
+          </form>
+        )}
+      </Card>
     </div>
   )
 }

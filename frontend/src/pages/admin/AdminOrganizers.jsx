@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const AdminOrganizers = () => {
+  const { t } = useTranslation();
   const [organizers, setOrganizers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -22,12 +24,13 @@ const AdminOrganizers = () => {
     fetchOrganizers();
   }, []);
 
-  if (loading) return <div>Loading organizers...</div>;
+  if (loading) return <div className="p-8 text-center text-zinc-500 font-medium">{t("common.loading")}</div>;
 
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-bold">Organizers</h2>
+        <h2 className="text-2xl font-bold text-zinc-900">{t("admin.organizers.title")}</h2>
+        <p className="text-zinc-500 mt-1">{t("admin.organizers.subtitle")}</p>
       </header>
 
       <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
@@ -35,12 +38,12 @@ const AdminOrganizers = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Name</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Organization</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Total Events</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-emerald-600">Approved</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-rose-600">Rejected</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.organizers.table.name")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.organizers.table.organization")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.organizers.table.email")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.organizers.table.totalEvents")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-emerald-600">{t("admin.organizers.table.approved")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-rose-600">{t("admin.organizers.table.rejected")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
@@ -57,8 +60,8 @@ const AdminOrganizers = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-10 text-center text-zinc-500 text-sm italic">
-                    No organizers found.
+                  <td colSpan="6" className="px-6 py-10 text-center text-zinc-500 text-sm italic font-medium">
+                    {t("admin.organizers.empty")}
                   </td>
                 </tr>
               )}

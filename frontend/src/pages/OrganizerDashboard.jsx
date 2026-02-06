@@ -1,9 +1,14 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useLocation } from "react-router-dom"
 import axios from "axios"
 import { Upload, X, ImageIcon, LayoutDashboard, PlusCircle, Calendar, Bell, Clock, CheckCircle2, XCircle, ChevronRight, Edit3 } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router-dom"
+import { EventControlBar } from "@/components/EventControlBar"
 
 export default function OrganizerDashboard() {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
   const location = useLocation()
   const [activeSection, setActiveSection] = useState("overview")
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -12,12 +17,54 @@ export default function OrganizerDashboard() {
   const [bannerFile, setBannerFile] = useState(null)
   const [bannerPreview, setBannerPreview] = useState("")
   const [showSuccessModal, setShowSuccessModal] = useState(false)
-  const [eventTab, setEventTab] = useState("all")
+  const [eventTab, setEventTab] = useState("approved")
+  const [selectedCategory, setSelectedCategory] = useState("All")
+  const [dateFilter, setDateFilter] = useState("all")
+  const [view, setView] = useState("grid")
   const [editingEvent, setEditingEvent] = useState(null)
 
   const [events, setEvents] = useState([])
   const [statsData, setStatsData] = useState({ pending: 0, approved: 0, rejected: 0, total: 0 })
   const [recentNotifications, setRecentNotifications] = useState([])
+
+  const categories = ["All", "Tech", "Cultural", "Sports", "Workshops", "Hackathons", "Clubs"]
+  const organizerTabs = [
+    { id: "approved", label: t("organizer.myEvents.tabs.approved") || "Approved" },
+    { id: "pending", label: t("organizer.myEvents.tabs.pending") || "Pending" },
+    { id: "rejected", label: t("organizer.myEvents.tabs.rejected") || "Rejected" }
+  ]
+
+  const organizerCounts = useMemo(() => ({
+    approved: events.filter(e => e.status === "approved").length,
+    pending: events.filter(e => e.status === "pending").length,
+    rejected: events.filter(e => e.status === "rejected").length
+  }), [events])
+
+  const filteredEventsForMyEvents = useMemo(() => {
+    let result = events.filter(event => event.status === eventTab)
+    
+    if (selectedCategory !== "All") {
+      result = result.filter(e => e.category === selectedCategory)
+    }
+
+    if (dateFilter !== "all") {
+      const today = new Date()
+      today.setHours(0,0,0,0)
+      result = result.filter(e => {
+        const d = new Date(e.date)
+        if (dateFilter === "today") return d.getTime() === today.getTime()
+        if (dateFilter === "week") {
+            const end = new Date(today); 
+            end.setDate(today.getDate() + 7); 
+            return d >= today && d <= end;
+        }
+        if (dateFilter === "month") return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()
+        return true
+      })
+    }
+
+    return result
+  }, [events, eventTab, selectedCategory, dateFilter])
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -169,10 +216,10 @@ export default function OrganizerDashboard() {
   }, [location]);
 
   const dashboardStats = [
-    { label: "Pending Approval", value: statsData.pending, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
-    { label: "Approved Events", value: statsData.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Rejected Events", value: statsData.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
-    { label: "Total Submissions", value: statsData.total, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: t("organizer.dashboard.stats.pending"), value: statsData.pending, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: t("organizer.dashboard.stats.approved"), value: statsData.approved, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+    { label: t("organizer.dashboard.stats.rejected"), value: statsData.rejected, icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+    { label: t("organizer.dashboard.stats.total"), value: statsData.total, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
   ]
 
   const upcomingEvents = events.filter(e => e.status === "approved")
@@ -262,15 +309,15 @@ export default function OrganizerDashboard() {
             {/* Quick Actions Hero */}
             <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200/50 flex flex-col md:flex-row items-center justify-between gap-6">
               <div className="text-center md:text-left">
-                <h2 className="text-2xl font-bold mb-2">Ready to host something amazing?</h2>
-                <p className="text-indigo-100 mb-0 opacity-90">Create and submit your event for approval instantly.</p>
+                <h2 className="text-2xl font-bold mb-2">{t("organizer.dashboard.ctaTitle")}</h2>
+                <p className="text-indigo-100 mb-0 opacity-90">{t("organizer.dashboard.ctaSubtitle")}</p>
               </div>
               <button
                 onClick={() => setActiveSection("create-event")}
                 className="bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shrink-0 shadow-lg"
               >
                 <PlusCircle className="w-5 h-5" />
-                Create New Event
+                {t("organizer.dashboard.createNew")}
               </button>
             </div>
 
@@ -278,9 +325,9 @@ export default function OrganizerDashboard() {
               {/* My Events List Preview */}
               <div className="lg:col-span-2 space-y-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-gray-900">Recent Events</h3>
+                  <h3 className="text-xl font-bold text-gray-900">{t("organizer.dashboard.recentEvents")}</h3>
                   <button onClick={() => setActiveSection("my-events")} className="text-indigo-600 font-medium text-sm hover:underline flex items-center gap-1">
-                    View All <ChevronRight className="w-4 h-4" />
+                    {t("organizer.dashboard.viewAll")} <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
                 
@@ -316,7 +363,7 @@ export default function OrganizerDashboard() {
                           <button 
                             onClick={() => handleEditEvent(event)}
                             className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title="Edit & Resubmit"
+                            title={t("organizer.myEvents.editResubmit")}
                           >
                             <Edit3 className="w-4 h-4" />
                           </button>
@@ -327,7 +374,7 @@ export default function OrganizerDashboard() {
                   {events.length === 0 && (
                      <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200">
                         <Calendar className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-                        <p className="text-gray-400">No events created yet.</p>
+                        <p className="text-gray-400">{t("organizer.dashboard.noEvents")}</p>
                      </div>
                   )}
                 </div>
@@ -348,7 +395,7 @@ export default function OrganizerDashboard() {
                        ) : (
                          <div className="p-8 text-center">
                             <Bell className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-                            <p className="text-xs text-gray-400">No recent notifications</p>
+                            <p className="text-xs text-gray-400">{t("student.notifications.noNotifications")}</p>
                          </div>
                        )}
                     </div>
@@ -356,7 +403,7 @@ export default function OrganizerDashboard() {
                       onClick={() => navigate("/notifications")}
                       className="w-full p-4 text-center text-sm font-bold text-indigo-600 hover:bg-indigo-50 border-t border-gray-50 transition-colors"
                     >
-                      View All Inbox
+                      {t("organizer.dashboard.viewAll")}
                     </button>
                  </div>
               </div>
@@ -366,11 +413,11 @@ export default function OrganizerDashboard() {
 
       case "my-events":
         return (
-          <div className="space-y-6 animate-in fade-in duration-500">
+          <div className="space-y-4 animate-in fade-in duration-500">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Event Portfolio</h2>
-                <p className="text-gray-500 text-sm mt-1">Manage and track your submissions</p>
+                <h2 className="text-2xl font-bold text-gray-900">{t("organizer.myEvents.title")}</h2>
+                <p className="text-gray-500 text-sm mt-1">{t("organizer.myEvents.subtitle")}</p>
               </div>
               <button
                 onClick={() => {
@@ -391,101 +438,139 @@ export default function OrganizerDashboard() {
                 className="px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 font-bold flex items-center gap-2 shadow-lg shadow-indigo-100"
               >
                 <PlusCircle className="w-5 h-5" />
-                New Event
+                {t("organizer.myEvents.newEvent")}
               </button>
             </div>
 
-            {/* Enhanced Status Tabs */}
-            <div className="flex p-1 bg-gray-100 rounded-2xl w-fit">
-              {["all", "pending", "approved", "rejected"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setEventTab(tab)}
-                  className={`px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                    eventTab === tab
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  <span className="capitalize">{tab}</span>
-                </button>
-              ))}
-            </div>
+            {/* Enhanced Status Tabs & Filters */}
+            <EventControlBar 
+              tabs={organizerTabs}
+              activeTab={eventTab}
+              onTabChange={setEventTab}
+              categories={categories}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              dateFilter={dateFilter}
+              onDateFilterChange={setDateFilter}
+              view={view}
+              onViewChange={setView}
+              counts={organizerCounts}
+            />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className={`animate-in fade-in duration-500 ${
+              view === "grid" 
+                ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8" 
+                : "flex flex-col gap-4"
+            }`}>
                {loading ? (
                  <div className="col-span-full py-20 text-center">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-                    <p className="text-gray-500 font-medium">Loading your portfolio...</p>
+                    <p className="text-gray-500 font-medium">{t("organizer.myEvents.loading")}</p>
                  </div>
-               ) : filteredEvents.length === 0 ? (
-                 <div className="col-span-full py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200">
+               ) : filteredEventsForMyEvents.length === 0 ? (
+                 <div className="col-span-full py-20 text-center bg-gray-50 rounded-3xl border border-dashed border-gray-200">
                     <Calendar className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-                    <p className="text-gray-500 text-lg font-medium">No {eventTab !== "all" ? eventTab : ""} events found.</p>
+                    <p className="text-gray-500 text-lg font-medium">{t("organizer.myEvents.noEvents", { status: t(`organizer.myEvents.tabs.${eventTab}`) })}</p>
                  </div>
                ) : (
-                 filteredEvents.map((event) => (
-                    <div key={event._id} className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col group">
-                       <div className="h-44 relative overflow-hidden">
-                          <img 
-                            src={event.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800"} 
-                            alt="" 
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute top-4 right-4">
-                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${
+                 filteredEventsForMyEvents.map((event) => (
+                    <div key={event._id} className={view === "list" ? "w-full" : "h-full"}>
+                      {view === "list" ? (
+                        <div className="relative group">
+                          {/* Use list-view EventCard but with organizer actions */}
+                          <EventCard {...event} id={event._id} view="list" />
+                          <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-4 bg-white/50 backdrop-blur-sm rounded-xl py-2 pl-4 md:flex hidden">
+                             {event.status === "rejected" ? (
+                               <button 
+                                 onClick={() => handleEditEvent(event)}
+                                 className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                 title={t("organizer.myEvents.editResubmit")}
+                               >
+                                  <Edit3 className="w-5 h-5" />
+                               </button>
+                             ) : (
+                               <button 
+                                 disabled={event.status === "pending"}
+                                 onClick={() => handleEditEvent(event)}
+                                 className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-30"
+                               >
+                                  <Edit3 className="w-5 h-5" />
+                               </button>
+                             )}
+                          </div>
+                          <div className="absolute top-2 right-2 md:hidden">
+                             <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest ${
                                event.status === "approved" ? "bg-green-500 text-white" :
                                event.status === "rejected" ? "bg-red-500 text-white" : "bg-amber-500 text-white"
                              }`}>
                                {event.status}
                              </span>
                           </div>
-                       </div>
-                       <div className="p-6 flex-1 flex flex-col">
-                          <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">{event.category}</div>
-                          <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">{event.title}</h4>
-                          <div className="space-y-2 mb-6 flex-1">
-                             <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <Calendar className="w-4 h-4" />
-                                {new Date(event.date).toLocaleDateString()}
-                             </div>
-                             <div className="flex items-center gap-2 text-sm text-gray-500">
-                                <Clock className="w-4 h-4" />
-                                {event.time}
-                             </div>
-                          </div>
+                        </div>
+                      ) : (
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col group h-full">
+                           <div className="h-44 relative overflow-hidden">
+                              <img 
+                                src={event.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800"} 
+                                alt="" 
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                              <div className="absolute top-4 right-4">
+                                 <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${
+                                   event.status === "approved" ? "bg-green-500 text-white" :
+                                   event.status === "rejected" ? "bg-red-500 text-white" : "bg-amber-500 text-white"
+                                 }`}>
+                                   {event.status}
+                                 </span>
+                              </div>
+                           </div>
+                           <div className="p-6 flex-1 flex flex-col">
+                              <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">{event.category}</div>
+                              <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">{event.title}</h4>
+                              <div className="space-y-2 mb-6 flex-1">
+                                 <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Calendar className="w-4 h-4" />
+                                    {new Date(event.date).toLocaleDateString()}
+                                 </div>
+                                 <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <Clock className="w-4 h-4" />
+                                    {event.time}
+                                 </div>
+                              </div>
 
-                          {event.status === "rejected" && event.rejectionReason && (
-                             <div className="mb-4 p-3 bg-red-50 rounded-xl border border-red-100">
-                                <p className="text-[10px] text-red-700 leading-tight">
-                                  <span className="font-bold">Reason:</span> {event.rejectionReason}
-                                </p>
-                             </div>
-                          )}
+                              {event.status === "rejected" && event.rejectionReason && (
+                                 <div className="mb-4 p-3 bg-red-50 rounded-xl border border-red-100">
+                                    <p className="text-[10px] text-red-700 leading-tight">
+                                      <span className="font-bold">{t("organizer.myEvents.rejectionReason")}:</span> {event.rejectionReason}
+                                    </p>
+                                 </div>
+                              )}
 
-                          <div className="flex gap-2 mt-auto">
-                             {event.status === "rejected" ? (
-                               <button 
-                                 onClick={() => handleEditEvent(event)}
-                                 className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-                               >
-                                  <Edit3 className="w-4 h-4" />
-                                  Edit & Resubmit
-                               </button>
-                             ) : (
-                               <button 
-                                 disabled={event.status === "pending"}
-                                 onClick={() => handleEditEvent(event)}
-                                 className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
-                               >
-                                  Edit Details
-                               </button>
-                             )}
-                          </div>
-                       </div>
+                              <div className="flex gap-2 mt-auto">
+                                 {event.status === "rejected" ? (
+                                   <button 
+                                     onClick={() => handleEditEvent(event)}
+                                     className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+                                   >
+                                      <Edit3 className="w-4 h-4" />
+                                      {t("organizer.myEvents.editResubmit")}
+                                   </button>
+                                 ) : (
+                                   <button 
+                                     disabled={event.status === "pending"}
+                                     onClick={() => handleEditEvent(event)}
+                                     className="flex-1 py-3 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                   >
+                                      {t("organizer.myEvents.editDetails")}
+                                   </button>
+                                 )}
+                              </div>
+                           </div>
+                        </div>
+                      )}
                     </div>
-                 ))
-               )}
+                  ))
+                )}
             </div>
           </div>
         )
@@ -504,7 +589,7 @@ export default function OrganizerDashboard() {
                 <X className="w-5 h-5 text-gray-500" />
               </button>
               <h2 className="text-2xl font-bold">
-                {editingEvent ? "Edit & Resubmit Event" : "Create New Event"}
+                {editingEvent ? t("organizer.createEvent.editTitle") : t("organizer.createEvent.title")}
               </h2>
             </div>
 
@@ -512,15 +597,15 @@ export default function OrganizerDashboard() {
               <form onSubmit={handleCreateEvent} className="space-y-5">
                 {editingEvent?.status === "rejected" && (
                   <div className="p-4 bg-red-50 border border-red-100 rounded-lg mb-6">
-                    <p className="text-sm text-red-700 font-medium">Rejection Reason:</p>
+                    <p className="text-sm text-red-700 font-medium">{t("organizer.myEvents.rejectionReason")}:</p>
                     <p className="text-sm text-red-600 mt-1">{editingEvent.rejectionReason}</p>
                   </div>
                 )}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Event Title</label>
+                  <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.title")}</label>
                   <input
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="e.g., Web Development Workshop"
+                    placeholder={t("organizer.createEvent.form.titlePlaceholder")}
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
@@ -528,10 +613,10 @@ export default function OrganizerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.description")}</label>
                   <textarea
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    placeholder="Tell students about your event..."
+                    placeholder={t("organizer.createEvent.form.descriptionPlaceholder")}
                     rows={4}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -541,7 +626,7 @@ export default function OrganizerDashboard() {
 
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Category</label>
+                    <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.category")}</label>
                     <select 
                       className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       value={formData.category}
@@ -557,10 +642,10 @@ export default function OrganizerDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Venue / Location</label>
+                    <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.venue")}</label>
                     <input
                       className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      placeholder="e.g., Main Auditorium"
+                      placeholder={t("organizer.createEvent.form.venuePlaceholder")}
                       value={formData.venue}
                       onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
                       required
@@ -570,7 +655,7 @@ export default function OrganizerDashboard() {
 
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Date</label>
+                    <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.date")}</label>
                     <input
                       type="date"
                       className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -581,7 +666,7 @@ export default function OrganizerDashboard() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-2">Time</label>
+                    <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.time")}</label>
                     <input
                       type="time"
                       className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -593,7 +678,7 @@ export default function OrganizerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-700">Event Banner Image</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-700">{t("organizer.createEvent.form.banner")}</label>
                   <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-indigo-400 transition-colors bg-gray-50/50">
                     <div className="space-y-1 text-center">
                       {bannerPreview ? (
@@ -625,7 +710,7 @@ export default function OrganizerDashboard() {
                                 htmlFor="file-upload"
                                 className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500"
                               >
-                                <span>Upload a file</span>
+                                <span>{t("organizer.createEvent.form.uploadFile")}</span>
                                 <input
                                   id="file-upload"
                                   name="file-upload"
@@ -635,9 +720,9 @@ export default function OrganizerDashboard() {
                                   onChange={handleFileChange}
                                 />
                               </label>
-                              <p className="pl-1">or drag and drop</p>
+                              <p className="pl-1">{t("organizer.createEvent.form.dragDrop")}</p>
                             </div>
-                            <p className="text-xs text-gray-500 mt-2">PNG, JPG, WEBP up to 5MB</p>
+                            <p className="text-xs text-gray-500 mt-2">{t("organizer.createEvent.form.bannerHint")}</p>
                           </div>
                         </>
                       )}
@@ -646,10 +731,10 @@ export default function OrganizerDashboard() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700">Or use Image URL</label>
+                  <label className="block text-sm font-medium mb-1 text-gray-700">{t("organizer.createEvent.form.imageUrl")}</label>
                   <input
                     className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                    placeholder="https://example.com/image.jpg"
+                    placeholder={t("organizer.createEvent.form.imageUrlPlaceholder")}
                     value={formData.image}
                     onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                     disabled={!!bannerFile}
@@ -662,7 +747,7 @@ export default function OrganizerDashboard() {
                     onClick={() => setActiveSection("my-events")}
                     className="px-6 py-2 border rounded-lg hover:bg-gray-50 font-medium"
                   >
-                    Cancel
+                    {t("organizer.createEvent.actions.cancel")}
                   </button>
                   <button 
                     type="submit" 
@@ -670,7 +755,7 @@ export default function OrganizerDashboard() {
                     className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold flex items-center gap-2"
                   >
                     {loading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>}
-                    {editingEvent ? "Update & Resubmit" : "Submit for Approval"}
+                    {editingEvent ? t("organizer.createEvent.actions.update") : t("organizer.createEvent.actions.submit")}
                   </button>
                 </div>
               </form>
@@ -706,8 +791,8 @@ export default function OrganizerDashboard() {
              <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
                 <CheckCircle2 className="w-10 h-10" />
              </div>
-             <h2 className="text-2xl font-black text-gray-900 mb-3">Submission Sent!</h2>
-             <p className="text-gray-500 mb-8 font-medium">Your event has been forwarded to campus administrators for review.</p>
+             <h2 className="text-2xl font-black text-gray-900 mb-3">{t("organizer.createEvent.successTitle")}</h2>
+             <p className="text-gray-500 mb-8 font-medium">{t("organizer.createEvent.successSubtitle")}</p>
              <button
                onClick={() => {
                  setShowSuccessModal(false)
@@ -715,7 +800,7 @@ export default function OrganizerDashboard() {
                }}
                className="w-full py-4 bg-gray-900 text-white rounded-2xl font-black hover:bg-indigo-600 transition-all shadow-xl"
              >
-               Explore My Hub
+               {t("organizer.createEvent.successCta")}
              </button>
           </div>
         </div>

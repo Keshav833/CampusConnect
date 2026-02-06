@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const AdminPendingEvents = () => {
+  const { t } = useTranslation();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +55,8 @@ const AdminPendingEvents = () => {
   return (
     <div className="space-y-6">
       <header>
-        <h2 className="text-2xl font-bold italic">Pending Events</h2>
+        <h2 className="text-2xl font-bold text-zinc-900">{t("admin.pending.title")}</h2>
+        <p className="text-zinc-500 mt-1">{t("admin.pending.subtitle")}</p>
       </header>
 
       <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
@@ -61,12 +64,12 @@ const AdminPendingEvents = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200">
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Event Title</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Organizer</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Category</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">View</th>
-                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-right">Action</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.title")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.organizer")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("organizer.createEvent.form.category")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.date")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider">{t("admin.dashboard.table.view")}</th>
+                <th className="px-6 py-3 text-xs font-bold text-zinc-500 uppercase tracking-wider text-right">{t("admin.dashboard.table.action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200">
@@ -83,7 +86,7 @@ const AdminPendingEvents = () => {
                     <td className="px-6 py-4 text-sm text-zinc-600">{new Date(event.date).toLocaleDateString()}</td>
                     <td className="px-6 py-4 text-sm">
                       <Link to={`/admin/event/${event._id}`} className="text-zinc-500 hover:text-zinc-900 font-medium">
-                        Details
+                        {t("admin.dashboard.table.view")}
                       </Link>
                     </td>
                     <td className="px-6 py-4 text-sm text-right">
@@ -92,13 +95,13 @@ const AdminPendingEvents = () => {
                           onClick={() => handleApprove(event._id)} 
                           className="px-3 py-1 bg-emerald-600 text-white rounded text-xs font-bold hover:bg-emerald-700 transition-colors"
                         >
-                          ✓ Approve
+                          ✓ {t("admin.eventReview.approve")}
                         </button>
                         <button 
                           onClick={() => handleReject(event._id)} 
                           className="px-3 py-1 bg-rose-600 text-white rounded text-xs font-bold hover:bg-rose-700 transition-colors"
                         >
-                          ✕ Reject
+                          ✕ {t("admin.eventReview.reject")}
                         </button>
                       </div>
                     </td>
@@ -107,7 +110,7 @@ const AdminPendingEvents = () => {
               ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-10 text-center text-zinc-500 text-sm italic">
-                    Great job! No pending events to review.
+                    {t("admin.pending.empty")}
                   </td>
                 </tr>
               )}
