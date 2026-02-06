@@ -16,6 +16,7 @@ export function PortalHeader({ unreadNotifications = 0 }) {
     if (path.includes('/events/')) return t("common.eventDetails", "Event Details");
     if (path === '/events') return t("student.events.title", "Discover Events");
     if (path === '/my-events') return t("student.myEvents.title", "My Events");
+    if (path === '/schedule') return t("common.schedule", "Schedule");
     if (path === '/profile') return t("common.profile", "Profile");
     if (path === '/dashboard') return t("common.dashboard", "Dashboard");
     if (path.includes('/organizer')) return "Organizer Portal";

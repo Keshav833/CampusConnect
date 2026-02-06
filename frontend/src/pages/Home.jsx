@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom"
+import { useEffect } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Navbar } from "@/components/Navbar"
 import { Hero } from "@/components/Hero"
@@ -8,6 +9,17 @@ import { StickyLanguageSwitcher } from "@/components/StickyLanguageSwitcher"
 
 export default function Home() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const token = localStorage.getItem("token")
+  const userRole = localStorage.getItem("userRole")
+
+  useEffect(() => {
+    if (token) {
+      if (userRole === "student") navigate("/dashboard")
+      else if (userRole === "organizer") navigate("/organizer/dashboard")
+      else if (userRole === "admin") navigate("/admin/dashboard")
+    }
+  }, [token, userRole, navigate])
 
   return (
     <div className="min-h-screen bg-white text-gray-950 font-sans">

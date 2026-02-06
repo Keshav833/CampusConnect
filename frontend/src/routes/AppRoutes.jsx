@@ -10,6 +10,8 @@ import Notifications from "../pages/Notifications";
 import Feedback from "../pages/Feedback";
 import EventDetails from "../pages/EventDetails";
 import Certificates from "../pages/Certificates";
+import Schedule from "../pages/Schedule";
+import StudentDashboard from "../pages/StudentDashboard";
 
 import StudentLayout from "../components/StudentLayout";
 import OrganizerLayout from "../components/OrganizerLayout";
@@ -29,11 +31,13 @@ export default function AppRoutes() {
 
       {/* Student Protected Routes */}
       <Route element={<StudentLayout />}>
+        <Route path="/dashboard" element={<StudentDashboard />} />
         <Route path="/events" element={<Events />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-events" element={<MyEvents />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/schedule" element={<Schedule />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/certificates" element={<Certificates />} />
       </Route>
