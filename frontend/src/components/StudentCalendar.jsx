@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const StudentCalendar = ({ events = [] }) => {
   const navigate = useNavigate();
+  const [tooltip, setTooltip] = React.useState({ show: false, content: "", x: 0, y: 0 });
 
   // Map categories to colors (using Campus Connect theme colors)
   const categoryColors = {
@@ -22,7 +23,8 @@ const StudentCalendar = ({ events = [] }) => {
   const formattedEvents = events.map((event) => ({
     id: event.eventId || event._id,
     title: event.title,
-    start: `${event.date}T${event.time || "00:00:00"}`,
+    start: `${event.startDate || event.date}T${event.time || "00:00:00"}`,
+    end: `${event.endDate || event.date}T${event.endTime || "23:59:59"}`,
     backgroundColor: categoryColors[event.category] || "#6366f1",
     borderColor: categoryColors[event.category] || "#6366f1",
     extendedProps: {
@@ -66,21 +68,32 @@ const StudentCalendar = ({ events = [] }) => {
             arg.el.style.borderLeft = `4px solid ${firstColor}`;
             arg.el.style.transition = "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)";
             arg.el.classList.add('day-has-event');
-            
-            const titles = dayEvents.map(e => e.title).join(' | ');
-            arg.el.setAttribute('title', titles);
           }
         }}
         eventMouseEnter={(info) => {
-          info.el.style.transform = "scale(1.05) translateY(-2px)";
+          info.el.style.backgroundColor = "#4989f154";
+          info.el.style.color = "#ffffff";
+          info.el.style.transform = "scale(1.02) translateY(-1px)";
           info.el.style.zIndex = "50";
-          info.el.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
+          info.el.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.06)";
           info.el.style.transition = "all 0.2s ease";
+          
+          const rect = info.el.getBoundingClientRect();
+          setTooltip({
+            show: true,
+            content: info.event.title,
+            x: rect.left + rect.width / 2,
+            y: rect.top - 10
+          });
         }}
         eventMouseLeave={(info) => {
+          const color = info.event.backgroundColor || '#494cfcff';
+          info.el.style.backgroundColor = `${color}15`;
+          info.el.style.color = '#1e293b';
           info.el.style.transform = "scale(1) translateY(0)";
           info.el.style.zIndex = "1";
           info.el.style.boxShadow = "none";
+          setTooltip({ ...tooltip, show: false });
         }}
         eventDidMount={(info) => {
           const color = info.event.backgroundColor || '#6366f1';
@@ -90,6 +103,20 @@ const StudentCalendar = ({ events = [] }) => {
         }}
         className="custom-fullcalendar"
       />
+
+      {/* Custom Tooltip */}
+      {tooltip.show && (
+        <div 
+          className="fixed z-[9999] pointer-events-none px-3 py-2 bg-zinc-900 text-white text-[11px] font-bold rounded-lg shadow-xl -translate-x-1/2 -translate-y-full animate-in fade-in zoom-in-95 duration-200"
+          style={{ 
+            left: `${tooltip.x}px`, 
+            top: `${tooltip.y}px`,
+          }}
+        >
+          {tooltip.content}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full border-4 border-transparent border-t-zinc-900" />
+        </div>
+      )}
       
       {/* Legend */}
       <div className="mt-6 flex flex-wrap gap-4 pt-4 border-t border-gray-50">
@@ -188,9 +215,10 @@ const StudentCalendar = ({ events = [] }) => {
           transition: all 0.2s ease;
         }
         .fc .fc-event:hover {
-          background: white !important;
+          background: #1e293b !important;
+          color: white !important;
           border-left-width: 6px !important;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
           z-index: 50;
         }
         .fc-daygrid-day-frame {

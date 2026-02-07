@@ -4,10 +4,11 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 export function MiniCalendarWidget({ events = [] }) {
+  const [tooltip, setTooltip] = React.useState({ show: false, content: "", x: 0, y: 0 });
   const formattedEvents = events.map(e => ({
     id: e._id,
     title: e.title,
-    start: e.date,
+    start: e.startDate || e.date,
     color: '#6366f1'
   }));
 
@@ -105,10 +106,14 @@ export function MiniCalendarWidget({ events = [] }) {
           font-weight: 800;
         }
         .mini-calendar-container .day-has-event .fc-daygrid-day-frame:hover {
-          background-color: #6366f115 !important;
+          background-color: #1e293b !important;
+          border-color: #1e293b !important;
           transform: scale(1.1);
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
           z-index: 10;
+        }
+        .mini-calendar-container .day-has-event .fc-daygrid-day-frame:hover .fc-daygrid-day-number {
+          color: white !important;
         }
         .mini-calendar-container .fc-daygrid-event-harness {
           display: none !important;
@@ -131,13 +136,48 @@ export function MiniCalendarWidget({ events = [] }) {
           if (dayEvents.length > 0) {
             arg.el.classList.add('day-has-event');
             const titles = dayEvents.map(e => e.title).join(' | ');
-            arg.el.setAttribute('title', titles);
+            
+            arg.el.onmouseenter = (e) => {
+              const rect = arg.el.getBoundingClientRect();
+              setTooltip({
+                show: true,
+                content: titles,
+                x: rect.left + rect.width / 2,
+                y: rect.top - 10
+              });
+            };
+            arg.el.onmouseleave = () => {
+              setTooltip(prev => ({ ...prev, show: false }));
+            };
           }
         }}
         eventMouseEnter={(info) => {
-          info.el.setAttribute('title', info.event.title);
+          const rect = info.el.getBoundingClientRect();
+          setTooltip({
+            show: true,
+            content: info.event.title,
+            x: rect.left + rect.width / 2,
+            y: rect.top - 10
+          });
+        }}
+        eventMouseLeave={() => {
+          setTooltip(prev => ({ ...prev, show: false }));
         }}
       />
+
+      {/* Custom Tooltip */}
+      {tooltip.show && (
+        <div 
+          className="fixed z-[9999] pointer-events-none px-2.5 py-1.5 bg-zinc-900 text-white text-[10px] font-black rounded-lg shadow-xl -translate-x-1/2 -translate-y-full animate-in fade-in zoom-in-95 duration-200 uppercase tracking-wider"
+          style={{ 
+            left: `${tooltip.x}px`, 
+            top: `${tooltip.y}px`,
+          }}
+        >
+          {tooltip.content}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-full border-4 border-transparent border-t-zinc-900" />
+        </div>
+      )}
     </div>
   );
 }

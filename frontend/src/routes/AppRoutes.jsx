@@ -12,6 +12,7 @@ import EventDetails from "../pages/EventDetails";
 import Certificates from "../pages/Certificates";
 import Schedule from "../pages/Schedule";
 import StudentDashboard from "../pages/StudentDashboard";
+import OrganizerEventDetail from "../pages/OrganizerEventDetail";
 
 import StudentLayout from "../components/StudentLayout";
 import OrganizerLayout from "../components/OrganizerLayout";
@@ -46,6 +47,7 @@ export default function AppRoutes() {
       <Route element={<OrganizerLayout />}>
         <Route path="/organizer/dashboard" element={<OrganizerDashboard />} />
         <Route path="/organizer/events" element={<OrganizerDashboard />} />
+        <Route path="/organizer/event/:id" element={<OrganizerEventDetail />} />
         <Route path="/organizer/create" element={<OrganizerDashboard />} />
         <Route path="/organizer/profile" element={<OrganizerDashboard />} />
         <Route path="/notifications" element={<Notifications />} />

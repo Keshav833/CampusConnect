@@ -8,8 +8,11 @@ const eventSchema = new mongoose.Schema({
     required: true,
     enum: ["Tech", "Cultural", "Sports", "Workshops", "Hackathons", "Clubs"]
   },
-  date: { type: String, required: true },
+  startDate: { type: String, required: true },
+  endDate: { type: String, required: true },
+  date: { type: String }, // Legacy field
   time: { type: String, required: true },
+  endTime: { type: String },
   venue: { type: String, required: true },
   image: { type: String },
   organizerId: { 

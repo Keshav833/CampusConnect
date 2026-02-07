@@ -11,18 +11,51 @@ export function PortalHeader({ unreadNotifications = 0 }) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   // Map routes to page titles
-  const getPageTitle = () => {
+  const getHeaderInfo = () => {
     const path = location.pathname;
-    if (path.includes('/events/')) return t("common.eventDetails", "Event Details");
-    if (path === '/events') return t("student.events.title", "Discover Events");
-    if (path === '/my-events') return t("student.myEvents.title", "My Events");
-    if (path === '/schedule') return t("common.schedule", "Schedule");
-    if (path === '/profile') return t("common.profile", "Profile");
-    if (path === '/dashboard') return t("common.dashboard", "Dashboard");
-    if (path.includes('/organizer')) return "Organizer Portal";
-    if (path.includes('/admin')) return "Admin Portal";
-    return "Campus Connect";
+    
+    // Student Routes
+    if (path.includes('/events/')) return { title: t("common.eventDetails", "Event Details") };
+    if (path === '/events') return { title: t("student.events.title", "Discover Events") };
+    if (path === '/my-events') return { title: t("student.myEvents.title", "My Events") };
+    if (path === '/schedule') return { title: t("common.schedule", "Schedule") };
+    if (path === '/profile') return { title: t("common.profile", "Profile") };
+    if (path === '/dashboard') return { title: t("common.dashboard", "Dashboard") };
+    
+    // Admin Routes
+    if (path === '/admin') return { 
+      title: t("admin.dashboard.title"), 
+      subtitle: t("admin.dashboard.subtitle") 
+    };
+    if (path === '/admin/pending') return { 
+      title: t("admin.pending.title"), 
+      subtitle: t("admin.pending.subtitle") 
+    };
+    if (path === '/admin/all') return { 
+      title: t("admin.allEvents.title"), 
+      subtitle: t("admin.allEvents.subtitle") 
+    };
+    if (path === '/admin/organizers') return { 
+      title: t("admin.organizers.title"), 
+      subtitle: t("admin.organizers.subtitle") 
+    };
+    if (path.includes('/admin/event/')) return { 
+      title: t("admin.eventReview.title"), 
+      subtitle: t("admin.eventReview.subtitle") 
+    };
+    
+    if (path.includes('/organizer/event/')) return { 
+      title: "Event Details", 
+      subtitle: "Review registration and participant data" 
+    };
+    
+    if (path.includes('/organizer')) return { title: "Organizer Portal" };
+    if (path.includes('/admin')) return { title: "Admin Portal" };
+    
+    return { title: "Campus Connect" };
   };
+
+  const headerInfo = getHeaderInfo();
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -34,10 +67,15 @@ export function PortalHeader({ unreadNotifications = 0 }) {
   return (
     <header className="h-[70px] bg-white md:rounded-[20px] px-4 md:px-6 flex items-center justify-between shadow-sm border-b md:border border-gray-100/50 transition-all shrink-0">
       {/* Left side: Page/Section Name */}
-      <div className="flex-1">
-         <span className="text-md font-bold text-gray-600 uppercase tracking-widest whitespace-nowrap">
-           {getPageTitle()}
-         </span>
+      <div className="flex-1 flex flex-col justify-center min-w-0">
+          <span className="text-sm font-bold text-gray-900 uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
+            {headerInfo.title}
+          </span>
+          {headerInfo.subtitle && (
+            <span className="text-[10px] font-medium text-gray-400 truncate hidden md:block">
+              {headerInfo.subtitle}
+            </span>
+          )}
       </div>
 
       {/* Right Container: Search + Actions */}

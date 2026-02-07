@@ -54,10 +54,6 @@ const AdminPendingEvents = () => {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-bold text-zinc-900">{t("admin.pending.title")}</h2>
-        <p className="text-zinc-500 mt-1">{t("admin.pending.subtitle")}</p>
-      </header>
 
       <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
@@ -83,7 +79,10 @@ const AdminPendingEvents = () => {
                         {event.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-600">{new Date(event.date).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-zinc-600">
+                      {new Date(event.startDate || event.date).toLocaleDateString()}
+                      {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString()}`}
+                    </td>
                     <td className="px-6 py-4 text-sm">
                       <Link to={`/admin/event/${event._id}`} className="text-zinc-500 hover:text-zinc-900 font-medium">
                         {t("admin.dashboard.table.view")}

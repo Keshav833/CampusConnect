@@ -5,6 +5,7 @@ import { Upload, X, ImageIcon, LayoutDashboard, PlusCircle, Calendar, Bell, Cloc
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 import { EventControlBar } from "@/components/EventControlBar"
+import { EventCard } from "@/components/EventCard"
 
 export default function OrganizerDashboard() {
   const { t } = useTranslation()
@@ -122,12 +123,15 @@ export default function OrganizerDashboard() {
       title: event.title,
       description: event.description,
       category: event.category,
-      date: event.date,
+      startDate: event.startDate || event.date,
+      endDate: event.endDate || event.date,
       time: event.time,
+      endTime: event.endTime || "",
       venue: event.venue,
       image: event.image,
       totalSeats: event.totalSeats || 100
     })
+    setIsMultiDay(!!(event.endDate && event.endDate !== (event.startDate || event.date)))
     setBannerPreview(event.image)
     setActiveSection("create-event")
   }
@@ -160,7 +164,11 @@ export default function OrganizerDashboard() {
         }
       }
 
-      const eventData = { ...formData, image: finalImageUrl }
+      const eventData = { 
+        ...formData, 
+        image: finalImageUrl,
+        endDate: isMultiDay ? formData.endDate : formData.startDate 
+      }
 
       if (editingEvent) {
         await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/events/${editingEvent._id}`, eventData, {
@@ -183,11 +191,14 @@ export default function OrganizerDashboard() {
         title: "",
         description: "",
         category: "Tech",
-        date: "",
+        startDate: "",
+        endDate: "",
         time: "",
+        endTime: "",
         venue: "",
         image: ""
       })
+      setIsMultiDay(false)
       setEditingEvent(null)
       
       // Show success modal instead of silent redirect
@@ -281,12 +292,15 @@ export default function OrganizerDashboard() {
     title: "",
     description: "",
     category: "Tech",
-    date: "",
+    startDate: "",
+    endDate: "",
     time: "",
+    endTime: "",
     venue: "",
     image: "",
     totalSeats: 100
   })
+  const [isMultiDay, setIsMultiDay] = useState(false)
 
   const renderContent = () => {
     switch (activeSection) {
@@ -426,8 +440,10 @@ export default function OrganizerDashboard() {
                     title: "",
                     description: "",
                     category: "Tech",
-                    date: "",
+                    startDate: "",
+                    endDate: "",
                     time: "",
+                    endTime: "",
                     venue: "",
                     image: "",
                     totalSeats: 100
@@ -478,7 +494,7 @@ export default function OrganizerDashboard() {
                       {view === "list" ? (
                         <div className="relative group">
                           {/* Use list-view EventCard but with organizer actions */}
-                          <EventCard {...event} id={event._id} view="list" />
+                          <EventCard {...event} id={event._id} view="list" detailPath={`/organizer/event/${event._id}`} />
                           <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-4 bg-white/50 backdrop-blur-sm rounded-xl py-2 pl-4 md:flex hidden">
                              {event.status === "rejected" ? (
                                <button 
@@ -511,9 +527,10 @@ export default function OrganizerDashboard() {
                         <div className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden flex flex-col group h-full">
                            <div className="h-44 relative overflow-hidden">
                               <img 
+                                onClick={() => navigate(`/organizer/event/${event._id}`)}
                                 src={event.image || "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800"} 
                                 alt="" 
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 cursor-pointer"
                               />
                               <div className="absolute top-4 right-4">
                                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg ${
@@ -526,7 +543,12 @@ export default function OrganizerDashboard() {
                            </div>
                            <div className="p-6 flex-1 flex flex-col">
                               <div className="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">{event.category}</div>
-                              <h4 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">{event.title}</h4>
+                              <h4 
+                                onClick={() => navigate(`/organizer/event/${event._id}`)}
+                                className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 cursor-pointer hover:text-indigo-600 transition-colors"
+                              >
+                                {event.title}
+                              </h4>
                               <div className="space-y-2 mb-6 flex-1">
                                  <div className="flex items-center gap-2 text-sm text-gray-500">
                                     <Calendar className="w-4 h-4" />
@@ -653,27 +675,78 @@ export default function OrganizerDashboard() {
                   </div>
                 </div>
 
+                <div className="flex items-center gap-2 mb-4 px-1">
+                  <input
+                    type="checkbox"
+                    id="multi-day-toggle"
+                    checked={isMultiDay}
+                    onChange={(e) => setIsMultiDay(e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
+                  <label htmlFor="multi-day-toggle" className="text-xs font-semibold text-gray-600">
+                    Is this a multi-day event?
+                  </label>
+                </div>
+
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div>
-                    <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.date")}</label>
+                    <label className="block text-sm font-medium mb-2">{isMultiDay ? "Start Date" : "Event Date"}</label>
                     <input
                       type="date"
                       className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      value={formData.date}
-                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      value={formData.startDate}
+                      onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
                       required
                     />
                   </div>
+                  {isMultiDay && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">End Date</label>
+                      <input
+                        type="date"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={formData.endDate}
+                        onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
 
+                <div className="grid sm:grid-cols-2 gap-5">
                   <div>
                     <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.time")}</label>
-                    <input
-                      type="time"
-                      className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      value={formData.time}
-                      onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                      required
-                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <input
+                          type="time"
+                          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          value={formData.time}
+                          onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                          required
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tight">Start Time</p>
+                      </div>
+                      <div>
+                        <input
+                          type="time"
+                          className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          value={formData.endTime}
+                          onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-tight">End Time (Optional)</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                     <label className="block text-sm font-medium mb-2">{t("organizer.createEvent.form.seats") || "Total Seats"}</label>
+                     <input
+                        type="number"
+                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        value={formData.totalSeats}
+                        onChange={(e) => setFormData({ ...formData, totalSeats: e.target.value })}
+                        required
+                     />
                   </div>
                 </div>
 

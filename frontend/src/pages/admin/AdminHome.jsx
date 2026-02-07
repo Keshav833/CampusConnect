@@ -41,10 +41,6 @@ const AdminHome = () => {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h2 className="text-2xl font-bold text-zinc-900">{t("admin.dashboard.title")}</h2>
-        <p className="text-zinc-500 mt-1">{t("admin.dashboard.subtitle")}</p>
-      </header>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[
@@ -83,7 +79,10 @@ const AdminHome = () => {
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
                     <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
-                    <td className="px-6 py-4 text-sm text-zinc-600">{new Date(event.date).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-zinc-600">
+                      {new Date(event.startDate || event.date).toLocaleDateString()}
+                      {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString()}`}
+                    </td>
                     <td className="px-6 py-4 text-sm text-right">
                       <Link to={`/admin/event/${event._id}`} className="text-zinc-400 hover:text-zinc-900 font-medium transition-colors">
                         {t("admin.dashboard.table.view")}

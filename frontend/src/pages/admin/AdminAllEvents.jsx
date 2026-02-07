@@ -49,10 +49,6 @@ const AdminAllEvents = () => {
   return (
     <div className="space-y-6">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-zinc-900">{t("admin.allEvents.title")}</h2>
-          <p className="text-zinc-500 mt-1">{t("admin.allEvents.subtitle")}</p>
-        </div>
         <div className="flex gap-2">
           <select 
             name="status" 
@@ -104,7 +100,10 @@ const AdminAllEvents = () => {
                         {t(`organizer.myEvents.tabs.${event.status}`)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-zinc-600">{new Date(event.date).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-sm text-zinc-600">
+                      {new Date(event.startDate || event.date).toLocaleDateString()}
+                      {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString()}`}
+                    </td>
                   </tr>
                 ))
               ) : (

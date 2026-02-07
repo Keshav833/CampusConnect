@@ -191,6 +191,8 @@
       "form": {
         "title": "Event Title",
         "titlePlaceholder": "e.g., Web Development Workshop",
+        "seats": "Total Slots",
+        "seatsPlaceholder": "e.g. 100",
         "description": "Description",
         "descriptionPlaceholder": "Tell students about your event...",
         "category": "Category",

@@ -28,7 +28,7 @@ exports.getEvents = async (req, res) => {
         }
       },
       { $project: { registrations: 0 } },
-      { $sort: { date: 1 } }
+      { $sort: { startDate: 1, date: 1 } }
     ]);
     res.json(events);
   } catch (error) {
@@ -54,6 +54,7 @@ exports.createEvent = async (req, res) => {
 
     const event = await Event.create({
       ...req.body,
+      date: req.body.startDate || req.body.date, // Sync legacy field
       description: {
         en: description,
         hi,
@@ -155,6 +156,7 @@ exports.updateEvent = async (req, res) => {
     // If updated, set status back to pending
     const updatedData = {
       ...req.body,
+      date: req.body.startDate || req.body.date, // Sync legacy field
       status: "pending",
       rejectionReason: null // Clear reason on resubmission
     };
@@ -179,5 +181,29 @@ exports.updateEvent = async (req, res) => {
   } catch (error) {
     console.error("Error updating event:", error);
     res.status(500).json({ error: "Failed to update event" });
+  }
+};
+
+// Get participants for a specific event (Organizer only)
+exports.getEventParticipants = async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({ error: "Event not found" });
+    }
+
+    // Ensure only the organizer of this event can see participants
+    if (event.organizerId.toString() !== req.user.id) {
+      return res.status(403).json({ error: "Not authorized to view participants for this event" });
+    }
+
+    const registrations = await Registration.find({ eventId: req.params.id })
+      .populate("studentId", "name email course year")
+      .sort({ registeredAt: -1 });
+
+    res.json(registrations);
+  } catch (error) {
+    console.error("Error fetching participants:", error);
+    res.status(500).json({ error: "Failed to fetch participants" });
   }
 };

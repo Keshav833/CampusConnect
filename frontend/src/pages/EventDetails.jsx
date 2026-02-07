@@ -98,6 +98,39 @@ export default function EventDetails() {
     setReminderSet(true)
   }
 
+  const createGoogleCalendarLink = (event) => {
+    if (!event) return "";
+    
+    // Format: YYYYMMDDTHHmmssZ
+    const formatDate = (dateStr, timeStr) => {
+      const d = new Date(dateStr);
+      // Simple parsing of "10:00 AM" or "14:00"
+      let [hours, minutes] = [0, 0];
+      if (timeStr) {
+        const match = timeStr.match(/(\d+):(\d+)(?:\s*(AM|PM))?/i);
+        if (match) {
+          hours = parseInt(match[1]);
+          minutes = parseInt(match[2]);
+          const meridiem = match[3];
+          if (meridiem?.toUpperCase() === 'PM' && hours < 12) hours += 12;
+          if (meridiem?.toUpperCase() === 'AM' && hours === 12) hours = 0;
+        }
+      }
+      d.setHours(hours, minutes, 0);
+      return d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    };
+
+    const start = formatDate(event.startDate || event.date, event.time);
+    // Use actual endDate if available, otherwise fallback to startDate
+    const end = formatDate(event.endDate || event.startDate || event.date, event.endTime || event.time);
+
+    const details = typeof event.description === 'object' 
+      ? (event.description[i18n.language] || event.description.en)
+      : event.description;
+
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.title)}&dates=${start}/${end}&details=${encodeURIComponent(details || "")}&location=${encodeURIComponent(event.venue || "")}&sf=true&output=xml`;
+  };
+
   if (loading) return (
     <div className="max-w-4xl mx-auto py-8">
       <div className="event-banner skeleton rounded-3xl" />
@@ -195,7 +228,9 @@ export default function EventDetails() {
               </div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</p>
               <p className="font-black text-gray-900 text-sm">
-                {new Date(event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' })}
+                {new Date(event.startDate || event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                {(!event.endDate || event.endDate === event.startDate) && ` ${new Date(event.startDate || event.date).getFullYear()}`}
               </p>
             </div>
             
@@ -204,7 +239,9 @@ export default function EventDetails() {
                 <Clock className="w-5 h-5" />
               </div>
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Time</p>
-              <p className="font-black text-gray-900 text-sm">{event.time}</p>
+              <p className="font-black text-gray-900 text-sm">
+                {event.time} {event.endTime && ` - ${event.endTime}`}
+              </p>
             </div>
             
             <div className="p-5 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-indigo-50/30 transition-all group">
@@ -303,6 +340,14 @@ export default function EventDetails() {
                 >
                   {reminderSet ? <CheckCircle className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
                   {reminderSet ? "Reminder Set" : "Notify Me"}
+                </button>
+
+                <button
+                  onClick={() => window.open(createGoogleCalendarLink(event), '_blank')}
+                  className="w-full py-3.5 px-6 rounded-2xl font-black transition-all active:scale-95 border border-indigo-100 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center gap-3 uppercase tracking-widest text-[9px]"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Add to Google Calendar
                 </button>
               </div>
             </div>

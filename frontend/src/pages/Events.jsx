@@ -57,12 +57,12 @@ export default function Events() {
 
     // 1. Tab Filtering
     if (activeTab === "upcoming") {
-      result = events.filter(e => new Date(e.date) >= now)
+      result = events.filter(e => new Date(e.startDate || e.date) >= now)
     } else if (activeTab === "registered") {
       const registeredIds = new Set(registrations.map(r => r.eventId))
       result = events.filter(e => registeredIds.has(e._id || e.id))
     } else if (activeTab === "past") {
-      result = events.filter(e => new Date(e.date) < now)
+      result = events.filter(e => new Date(e.startDate || e.date) < now)
     }
 
     // 2. Category Filtering
@@ -76,7 +76,7 @@ export default function Events() {
       today.setHours(0, 0, 0, 0)
       
       result = result.filter(e => {
-        const eventDate = new Date(e.date)
+        const eventDate = new Date(e.startDate || e.date)
         if (dateFilter === "today") {
           return eventDate.getTime() === today.getTime()
         }
@@ -98,9 +98,9 @@ export default function Events() {
   const counts = useMemo(() => {
     const now = new Date().setHours(0, 0, 0, 0)
     return {
-      upcoming: events.filter(e => new Date(e.date) >= now).length,
+      upcoming: events.filter(e => new Date(e.startDate || e.date) >= now).length,
       registered: registrations.length,
-      past: events.filter(e => new Date(e.date) < now).length
+      past: events.filter(e => new Date(e.startDate || e.date) < now).length
     }
   }, [events, registrations])
 

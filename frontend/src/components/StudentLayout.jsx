@@ -35,7 +35,7 @@ export default function StudentLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-[#f5f7fb] p-0 md:p-4 gap-0 md:gap-4 box-border overflow-hidden relative">
+    <div className="flex h-screen bg-[#f5f7fb] p-0 md:p-4 gap-0 md:gap-4 box-border overflow-hidden relative overflow-x-hidden">
       {/* Sidebar - Floating Left (Hidden on Mobile) */}
       <Sidebar 
         role="student" 

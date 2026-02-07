@@ -64,7 +64,6 @@ const AdminEventDetail = () => {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h2 className="text-2xl font-bold text-zinc-900">{t("admin.eventReview.title")}</h2>
       </header>
 
       <div className="bg-white rounded-xl border border-zinc-200 shadow-sm overflow-hidden">
@@ -84,7 +83,11 @@ const AdminEventDetail = () => {
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t("admin.eventReview.fields.dateTime")}</h3>
-              <p className="text-lg font-semibold text-zinc-900">{new Date(event.date).toLocaleDateString()} at {event.time || 'TBA'}</p>
+              <p className="text-lg font-semibold text-zinc-900">
+                {new Date(event.startDate || event.date).toLocaleDateString()}
+                {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString()}`}
+                {` at ${event.time || 'TBA'}`}
+              </p>
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t("admin.eventReview.fields.venue")}</h3>
@@ -98,7 +101,9 @@ const AdminEventDetail = () => {
 
           <div className="space-y-2 pt-8 border-t border-zinc-100">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t("admin.eventReview.fields.description")}</h3>
-            <p className="text-zinc-600 leading-relaxed overflow-wrap-anywhere whitespace-pre-wrap">{event.description}</p>
+            <p className="text-zinc-600 leading-relaxed overflow-wrap-anywhere whitespace-pre-wrap">
+              {typeof event.description === 'object' ? (event.description.en || Object.values(event.description)[0]) : event.description}
+            </p>
           </div>
 
           {event.status !== 'pending' && (

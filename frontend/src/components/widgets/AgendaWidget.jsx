@@ -6,7 +6,7 @@ export function AgendaWidget({ events = [] }) {
   const navigate = useNavigate();
   const today = new Date().toISOString().split('T')[0];
   
-  const todayEvents = events.filter(e => e.date === today);
+  const todayEvents = events.filter(e => (e.startDate || e.date) === today);
 
   return (
     <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100">

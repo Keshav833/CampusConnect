@@ -48,7 +48,7 @@ export function Sidebar({ role, unreadNotifications = 0, isCollapsed = false, on
 
   return (
     <aside 
-      className={`bg-white border border-gray-100 flex flex-col md:rounded-[20px] shadow-sm transition-all duration-300 z-50 ${
+      className={`bg-white border border-gray-100 flex flex-col md:rounded-[20px] shadow-sm transition-all duration-300 z-50 overflow-hidden overflow-x-hidden ${
         isCollapsed ? "md:w-[80px]" : "md:w-[260px]"
       } ${
         // Mobile: Fixed drawer, Desktop: Relative flex item
@@ -58,9 +58,9 @@ export function Sidebar({ role, unreadNotifications = 0, isCollapsed = false, on
         "hidden md:flex"
       }`}
     >
-      <div className={`p-6 border-b border-gray-100/50 flex items-center ${isCollapsed ? "justify-center" : "justify-between"}`}>
-        {!isCollapsed && (
-          <div>
+      <div className={`p-6 border-b border-gray-100/50 flex items-center relative h-[88px] ${isCollapsed ? "justify-center" : "justify-between"}`}>
+        <div className={`transition-all duration-300 flex items-center ${isCollapsed ? "opacity-0 invisible scale-50 w-0" : "opacity-100 visible scale-100 w-auto"}`}>
+          <div className="min-w-[120px]">
             <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent truncate">
               Campus Connect
             </h1>
@@ -68,21 +68,23 @@ export function Sidebar({ role, unreadNotifications = 0, isCollapsed = false, on
               {role} Portal
             </p>
           </div>
-        )}
-        {isCollapsed && (
-           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shrink-0">
+        </div>
+
+        <div className={`absolute left-1/2 -translate-x-1/2 transition-all duration-300 ${isCollapsed ? "opacity-100 visible scale-100" : "opacity-0 invisible scale-50"}`}>
+           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shrink-0 shadow-sm">
              <span className="text-white font-bold text-lg">C</span>
            </div>
-        )}
+        </div>
+
         <button 
           onClick={onToggle}
-          className={`p-2 rounded-lg hover:bg-white text-gray-400 transition-colors shadow-sm border border-transparent hover:border-gray-100 ${!isCollapsed ? "ml-2" : ""}`}
+          className={`p-2 rounded-lg hover:bg-white text-gray-400 transition-all shadow-sm border border-transparent hover:border-gray-100 z-10 ${!isCollapsed ? "ml-2" : ""}`}
         >
           {isCollapsed ? <Menu className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
         </button>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto overflow-x-hidden">
         {items.map((item) => (
           <NavLink
             key={item.id}

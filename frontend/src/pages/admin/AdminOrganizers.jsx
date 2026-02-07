@@ -28,10 +28,6 @@ const AdminOrganizers = () => {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h2 className="text-2xl font-bold text-zinc-900">{t("admin.organizers.title")}</h2>
-        <p className="text-zinc-500 mt-1">{t("admin.organizers.subtitle")}</p>
-      </header>
 
       <div className="bg-white rounded-lg border border-zinc-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">

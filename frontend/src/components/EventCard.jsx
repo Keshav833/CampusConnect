@@ -3,7 +3,7 @@ import { Link } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import { MapPin, ChevronDown, Calendar, Ticket, Laptop, Music, Trophy, Wrench, Rocket, Users } from 'lucide-react';
 
-export function EventCard({ id, title, category, description, date, time, venue, image, organizerName, registeredCount, totalSeats, status, view = "grid" }) {
+export function EventCard({ id, title, category, description, startDate, endDate, date, time, endTime, venue, image, organizerName, registeredCount, totalSeats, status, view = "grid", detailPath }) {
   const { t, i18n } = useTranslation();
   
   // Handle localized description object or plain string
@@ -43,9 +43,10 @@ export function EventCard({ id, title, category, description, date, time, venue,
 
   if (view === "list") {
     const remainingSeats = Math.max(0, (totalSeats || 100) - (registeredCount || 0));
+    const targetPath = detailPath || `/events/${id}`;
     
     return (
-      <Link to={`/events/${id}`} className="block group transition-all hover:translate-x-1 duration-300">
+      <Link to={targetPath} className="block group transition-all hover:translate-x-1 duration-300">
         <div className="w-full bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:shadow-indigo-50/50 border border-gray-100/60 flex flex-row items-center p-2.5 gap-0">
           
           {/* Zone 1: Image Section */}
@@ -93,7 +94,9 @@ export function EventCard({ id, title, category, description, date, time, venue,
                 <Calendar className="w-3 h-3 text-indigo-500" />
               </div>
               <span className="text-[11px] font-bold">
-                {new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} • {time}
+                {new Date(startDate || date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                {endDate && endDate !== startDate && ` - ${new Date(endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`}
+                {` • ${time}`} {endTime && ` - ${endTime}`}
               </span>
             </div>
             <div className="flex items-center gap-2 text-gray-500">
@@ -144,8 +147,10 @@ export function EventCard({ id, title, category, description, date, time, venue,
     );
   }
 
+  const targetPath = detailPath || `/events/${id}`;
+
   return (
-    <Link to={`/events/${id}`} className="block group transition-transform hover:scale-[1.01] duration-300 h-full">
+    <Link to={targetPath} className="block group transition-transform hover:scale-[1.01] duration-300 h-full">
       <div className="w-full bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:shadow-indigo-50/50 font-sans h-full border border-gray-100/60 flex flex-col transition-all">
         {/* Header Image Area */}
         <div className={`relative h-40 m-2 rounded-2xl bg-gradient-to-br ${gradients}`}>
@@ -182,7 +187,10 @@ export function EventCard({ id, title, category, description, date, time, venue,
         {/* Content */}
         <div className="pt-2 px-5 pb-5 flex flex-col flex-1">
           <div className="text-[9px] font-black text-indigo-500 uppercase tracking-widest mb-1">
-            {new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • {time}
+            {new Date(startDate || date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            {endDate && endDate !== startDate && ` - ${new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+            {(!endDate || endDate === startDate) && `, ${new Date(startDate || date).getFullYear()}`}
+            {` • ${time}`} {endTime && ` - ${endTime}`}
           </div>
           
           <h2 className="text-sm font-black text-gray-900 mb-1 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">

@@ -50,10 +50,10 @@ export default function StudentDashboard() {
   const stats = [
     { label: "My Registrations", value: registrations.length, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
     { label: "Available Events", value: events.length, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Upcoming Soon", value: events.filter(e => new Date(e.date) > new Date()).length, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "Upcoming Soon", value: events.filter(e => new Date(e.startDate || e.date) > new Date()).length, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
-  const upcomingEvent = events.filter(e => new Date(e.date) > new Date()).sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+  const upcomingEvent = events.filter(e => new Date(e.startDate || e.date) > new Date()).sort((a,b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date))[0];
 
   if (loading) {
     return (
