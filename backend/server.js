@@ -1,4 +1,4 @@
-const http = require("http");
+const http = require("http"); // RELOAD TRIGGER
 const { Server } = require("socket.io");
 require("dotenv").config();
 const app = require("./src/app");

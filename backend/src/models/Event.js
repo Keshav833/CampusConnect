@@ -1,8 +1,22 @@
 const mongoose = require("mongoose");
 
 const eventSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  description: { type: mongoose.Schema.Types.Mixed, required: true },
+  title: {
+    en: { type: String, required: true },
+    hi: String,
+    bn: String,
+    gu: String,
+    mr: String,
+    ta: String,
+  },
+  description: {
+    en: { type: String, required: true },
+    hi: String,
+    bn: String,
+    gu: String,
+    mr: String,
+    ta: String,
+  },
   category: { 
     type: String, 
     required: true,

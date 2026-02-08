@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { getEvents, createEvent, getOrganizerEvents, getEventDetail, updateEvent, getOrganizerStats, getEventParticipants } = require("../controllers/event.controller");
+const { getEvents, createEvent, getOrganizerEvents, getEventDetail, updateEvent, getOrganizerStats, getEventParticipants, migrateEventsToLingo } = require("../controllers/event.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 const roleMiddleware = require("../middleware/role.middleware");
 
@@ -15,5 +15,6 @@ router.put("/:id", authMiddleware, roleMiddleware("organizer"), updateEvent);
 router.get("/", getEvents);
 router.get("/:id/participants", authMiddleware, roleMiddleware("organizer"), getEventParticipants);
 router.get("/:id", getEventDetail);
+router.get("/debug/migrate-lingo", migrateEventsToLingo);
 
 module.exports = router;
