@@ -1,4 +1,7 @@
-![CampusConnect Banner](frontend/public/Group1.png)
+<p align="center">
+  <img src="frontend/public/Group1.png" width="100%" />
+</p>
+
 
 **CampusConnect** is a comprehensive event management and campus engagement platform designed to bridge the gap between students, organizers, and administrators. It provides a seamless experience for discovering events, managing registrations, and fostering a vibrant campus community.
 
