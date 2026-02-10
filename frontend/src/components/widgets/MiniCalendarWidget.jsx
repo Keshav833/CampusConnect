@@ -2,8 +2,10 @@ import React from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useTranslation } from "react-i18next";
 
 export function MiniCalendarWidget({ events = [] }) {
+  const { i18n } = useTranslation();
   const [tooltip, setTooltip] = React.useState({ show: false, content: "", x: 0, y: 0 });
   const formattedEvents = events.map(e => ({
     id: e._id,

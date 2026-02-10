@@ -17,7 +17,11 @@ import {
   Music,
   Trophy,
   Wrench,
-  Rocket
+  Rocket,
+  Linkedin,
+  Twitter,
+  Link,
+  MessageCircle
 } from "lucide-react"
 import "./EventDetails.css"
 
@@ -32,6 +36,7 @@ export default function EventDetails() {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
   const [reminderSet, setReminderSet] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const token = localStorage.getItem("token")
   const userRole = localStorage.getItem("userRole")
@@ -41,7 +46,7 @@ export default function EventDetails() {
     if (token && userRole === "student") {
       checkRegistrationStatus()
     }
-  }, [id, token, userRole])
+  }, [id, token, userRole, i18n.language])
 
   const checkRegistrationStatus = async () => {
     try {
@@ -56,8 +61,9 @@ export default function EventDetails() {
 
   const fetchEventDetails = async () => {
     try {
+      const lang = i18n.language;
       const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {}
-      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events/${id}`, config)
+      const res = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events/${id}?lang=${lang}`, config)
       setEvent(res.data)
     } catch (error) {
       console.error("Error fetching event details:", error)
@@ -73,7 +79,7 @@ export default function EventDetails() {
     }
 
     if (userRole !== "student") {
-      alert("Only students can register for events.")
+      alert(t("organizer.createEvent.error") || "Only students can register for events.")
       return
     }
 
@@ -97,6 +103,31 @@ export default function EventDetails() {
   const handleSetReminder = () => {
     setReminderSet(true)
   }
+
+  const handleNativeShare = async () => {
+    const shareData = {
+      title: event.title,
+      text: `${t("student.eventDetails.checkOut")} ${event.title}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback or just do nothing (social links are below)
+        handleCopyLink();
+      }
+    } catch (err) {
+      console.log("Share cancelled");
+    }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setLinkCopied(true);
+    setTimeout(() => setLinkCopied(false), 2000);
+  };
 
   const createGoogleCalendarLink = (event) => {
     if (!event) return "";
@@ -174,6 +205,14 @@ export default function EventDetails() {
     "Clubs": "from-sky-400 via-blue-500 to-indigo-600"
   }[event.category] || "from-gray-200 via-gray-300 to-gray-200";
 
+  const slugify = (text) => {
+    return text
+      ?.toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  };
+
   return (
     <div className="max-w-[1400px] pb-12">
       {/* 1️⃣ Editorial Hero Section */}
@@ -190,18 +229,24 @@ export default function EventDetails() {
         {/* Top Badges */}
         <div className="absolute top-6 left-6 flex gap-3">
           <div className="px-4 py-2 bg-white/90 backdrop-blur-md shadow-xl rounded-xl text-[10px] font-black text-indigo-600 uppercase tracking-widest border border-white/20">
-            {event.category}
+            {t(`common.categories.${event.category.toLowerCase()}`) || event.category}
           </div>
           <div className="px-4 py-2 bg-indigo-600/90 backdrop-blur-md shadow-xl rounded-xl text-[10px] font-black text-white uppercase tracking-widest border border-white/10 flex items-center gap-2">
             <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-            ACTIVE
+            {t("student.eventDetails.active") || "ACTIVE"}
           </div>
         </div>
 
         {/* Event Title in Banner (Bottom Left) */}
         <div className="absolute bottom-6 left-6 right-6">
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
-            {event.title}
+            {(() => {
+              const slug = slugify(event.title);
+              const titleKey = `content:${slug}.title`;
+              const translated = t(titleKey, { lng: i18n.language, fallbackLng: false });
+              const isKey = !translated || translated === titleKey || translated.includes('.title') || translated.startsWith('content:');
+              return !isKey ? translated : event.title;
+            })()}
           </h1>
         </div>
       </div>
@@ -215,7 +260,7 @@ export default function EventDetails() {
               {event.organizerName?.charAt(0) || "O"}
             </div>
             <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">Organized By</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-0.5">{t("student.eventDetails.organizedBy")}</p>
               <p className="font-black text-gray-900 text-base">{event.organizerName || "Campus Club"}</p>
             </div>
           </div>
@@ -226,10 +271,10 @@ export default function EventDetails() {
               <div className="w-10 h-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600 mb-4 group-hover:scale-110 transition-transform">
                 <Calendar className="w-5 h-5" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Date</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t("student.eventDetails.date")}</p>
               <p className="font-black text-gray-900 text-sm">
-                {new Date(event.startDate || event.date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}`}
+                {new Date(event.startDate || event.date).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short' })}
+                {event.endDate && event.endDate !== event.startDate && ` - ${new Date(event.endDate).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short', year: 'numeric' })}`}
                 {(!event.endDate || event.endDate === event.startDate) && ` ${new Date(event.startDate || event.date).getFullYear()}`}
               </p>
             </div>
@@ -238,7 +283,7 @@ export default function EventDetails() {
               <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 mb-4 group-hover:scale-110 transition-transform">
                 <Clock className="w-5 h-5" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Time</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t("student.eventDetails.time")}</p>
               <p className="font-black text-gray-900 text-sm">
                 {event.time} {event.endTime && ` - ${event.endTime}`}
               </p>
@@ -248,7 +293,7 @@ export default function EventDetails() {
               <div className="w-10 h-10 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600 mb-4 group-hover:scale-110 transition-transform">
                 <MapPin className="w-5 h-5" />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Location</p>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">{t("student.eventDetails.location")}</p>
               <p className="font-black text-gray-900 text-sm line-clamp-1">{event.venue}</p>
             </div>
           </div>
@@ -257,12 +302,22 @@ export default function EventDetails() {
           <section className="bg-white p-6 md:p-8 rounded-[2rem] border border-gray-100 shadow-sm">
             <h2 className="text-lg font-black text-gray-900 mb-6 flex items-center gap-3">
               <div className="w-1.5 h-5 bg-indigo-600 rounded-full" />
-              About the Event
+              {t("student.eventDetails.aboutEvent")}
             </h2>
             <div className="text-gray-600 leading-relaxed text-sm whitespace-pre-wrap font-medium opacity-90">
-              {typeof event.description === 'object' 
-                ? (event.description[i18n.language] || event.description.en)
-                : event.description}
+              {(() => {
+                const slug = slugify(event.title);
+                const translationKey = `content:${slug}.description`;
+                
+                // Prioritize manual override if it exists in current language
+                const translated = t(translationKey, { lng: i18n.language, fallbackLng: false });
+                const isKey = !translated || translated === translationKey || translated.includes('.description') || translated.startsWith('content:');
+                
+                if (!isKey) return translated;
+
+                // Fallback to the already-localized string from backend
+                return event.description || "";
+              })()}
             </div>
           </section>
         </div>
@@ -277,8 +332,8 @@ export default function EventDetails() {
                   <Ticket className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-base font-black text-gray-900 leading-tight">Registration</h3>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isPassed ? "Event Closed" : "Open for students"}</p>
+                  <h3 className="text-base font-black text-gray-900 leading-tight">{t("student.eventDetails.registration")}</h3>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{isPassed ? t("student.eventDetails.eventClosed") : t("student.eventDetails.openForStudents")}</p>
                 </div>
               </div>
 
@@ -289,7 +344,7 @@ export default function EventDetails() {
                     {Math.round(progress)}%
                   </span>
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                    {event.registeredCount}/{event.totalSeats || 100} SOLD
+                    {event.registeredCount}/{event.totalSeats || 100} {t("student.eventDetails.sold")}
                   </span>
                 </div>
                 <div className="h-2.5 w-full bg-gray-50 rounded-full overflow-hidden p-0.5 border border-gray-100/50">
@@ -302,8 +357,8 @@ export default function EventDetails() {
                   <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
                   <span className="text-[10px] font-bold text-gray-500">
                     {event.seatsAvailable > 0 
-                      ? `${event.seatsAvailable} Spots Left` 
-                      : "Event reaches full capacity"}
+                      ? `${event.seatsAvailable} ${t("student.eventDetails.spotsLeft")}` 
+                      : t("student.eventDetails.eventFull")}
                   </span>
                 </div>
               </div>
@@ -312,12 +367,12 @@ export default function EventDetails() {
               <div className="space-y-3 pt-4 border-t border-gray-50">
                 {isPassed ? (
                   <button className="w-full py-4 bg-gray-100 text-gray-400 font-black rounded-2xl cursor-not-allowed uppercase tracking-widest shadow-sm text-xs" disabled>
-                    Event Completed
+                    {t("student.eventDetails.eventCompleted")}
                   </button>
                 ) : isRegistered ? (
                   <button className="w-full py-4 bg-green-500 text-white font-black rounded-2xl shadow-xl shadow-green-100 flex items-center justify-center gap-2 uppercase tracking-widest text-xs" disabled>
                     <CheckCircle className="w-5 h-5" />
-                    Registered
+                    {t("student.eventDetails.registered")}
                   </button>
                 ) : (
                   <button
@@ -325,7 +380,7 @@ export default function EventDetails() {
                     disabled={registering || event.seatsAvailable === 0}
                     className="w-full py-4 bg-indigo-600 text-white font-black rounded-2xl shadow-2xl shadow-indigo-200 hover:bg-indigo-700 transition-all active:scale-95 disabled:bg-gray-200 disabled:text-gray-400 uppercase tracking-widest transform hover:-translate-y-1 text-xs"
                   >
-                    {registering ? "Processing..." : event.seatsAvailable === 0 ? "Full Capacity" : "Register Now"}
+                    {registering ? t("student.eventDetails.processing") : event.seatsAvailable === 0 ? t("student.eventDetails.fullCapacity") : t("student.eventDetails.register")}
                   </button>
                 )}
                 
@@ -339,7 +394,7 @@ export default function EventDetails() {
                   }`}
                 >
                   {reminderSet ? <CheckCircle className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
-                  {reminderSet ? "Reminder Set" : "Notify Me"}
+                  {reminderSet ? t("student.eventDetails.reminderSet") : t("student.eventDetails.notifyMe")}
                 </button>
 
                 <button
@@ -347,17 +402,69 @@ export default function EventDetails() {
                   className="w-full py-3.5 px-6 rounded-2xl font-black transition-all active:scale-95 border border-indigo-100 bg-indigo-50/30 text-indigo-600 hover:bg-indigo-100 flex items-center justify-center gap-3 uppercase tracking-widest text-[9px]"
                 >
                   <Calendar className="w-3.5 h-3.5" />
-                  Add to Google Calendar
+                  {t("student.eventDetails.addToCalendar")}
                 </button>
               </div>
             </div>
 
             {/* Additional Meta (Share etc) */}
-            <div className="bg-gray-50/50 p-5 rounded-[1.5rem] border border-gray-100 flex items-center justify-between">
-              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Share event</span>
-              <button className="w-9 h-9 bg-white shadow-sm border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all">
-                <Share2 className="w-4 h-4" />
-              </button>
+            <div className="bg-gray-50/50 p-6 rounded-[2rem] border border-gray-100 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{t("student.eventDetails.share")}</span>
+                <button 
+                  onClick={handleNativeShare}
+                  className="w-9 h-9 bg-white shadow-sm border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-indigo-600 hover:border-indigo-100 transition-all"
+                  title="Native Share"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-2">
+                <a 
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#0077b5] hover:border-[#0077b5]/30 hover:bg-[#0077b5]/5 transition-all"
+                  title="Share on LinkedIn"
+                >
+                  <Linkedin className="w-4 h-4" />
+                </a>
+                <a 
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(event?.title || "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#1DA1F2] hover:border-[#1DA1F2]/30 hover:bg-[#1DA1F2]/5 transition-all"
+                  title="Share on Twitter"
+                >
+                  <Twitter className="w-4 h-4" />
+                </a>
+                <a 
+                  href={`https://wa.me/?text=${encodeURIComponent(`${event?.title}: ${window.location.href}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-10 bg-white border border-gray-100 rounded-xl flex items-center justify-center text-gray-400 hover:text-[#25D366] hover:border-[#25D366]/30 hover:bg-[#25D366]/5 transition-all"
+                  title="Share on WhatsApp"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </a>
+                <button 
+                  onClick={handleCopyLink}
+                  className={`h-10 rounded-xl flex items-center justify-center transition-all border ${
+                    linkCopied 
+                      ? "bg-green-50 text-green-600 border-green-200" 
+                      : "bg-white text-gray-400 border-gray-100 hover:text-indigo-600 hover:border-indigo-100 hover:bg-indigo-50/30"
+                  }`}
+                  title="Copy Link"
+                >
+                  {linkCopied ? <CheckCircle className="w-4 h-4" /> : <Link className="w-4 h-4" />}
+                </button>
+              </div>
+              {linkCopied && (
+                <p className="text-[9px] font-black text-green-600 uppercase tracking-widest text-center animate-pulse">
+                  {t("student.eventDetails.linkCopied") || "Link Copied!"}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -371,22 +478,22 @@ export default function EventDetails() {
             <div className="w-24 h-24 bg-green-50 rounded-[2rem] flex items-center justify-center mx-auto mb-8 text-5xl shadow-inner border border-green-100/50">
               🎉
             </div>
-            <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">You're In!</h2>
+            <h2 className="text-3xl font-black text-gray-900 mb-3 tracking-tight">{t("student.eventDetails.youreIn")}</h2>
             <p className="text-gray-500 mb-10 leading-relaxed font-medium">
-              Registration successful. We've added this event to your calendar and sent a confirmation.
+              {t("student.eventDetails.registrationSuccess")}
             </p>
             <div className="space-y-4">
               <button 
                 className="w-full py-5 bg-indigo-600 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:bg-indigo-700 transition-all active:scale-95 uppercase tracking-widest"
                 onClick={() => navigate('/my-events')}
               >
-                View My Events
+                {t("student.eventDetails.viewMyEvents")}
               </button>
               <button 
                 className="w-full py-4 text-gray-400 font-black hover:text-gray-600 transition-colors uppercase tracking-widest text-[11px]"
                 onClick={() => setShowSuccessModal(false)}
               >
-                Back to Details
+                {t("student.eventDetails.backToDetails")}
               </button>
             </div>
           </div>

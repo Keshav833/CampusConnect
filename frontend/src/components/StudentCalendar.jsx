@@ -4,8 +4,10 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const StudentCalendar = ({ events = [] }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [tooltip, setTooltip] = React.useState({ show: false, content: "", x: 0, y: 0 });
 
@@ -42,6 +44,7 @@ const StudentCalendar = ({ events = [] }) => {
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
+        locale={i18n.language}
         headerToolbar={{
           left: "prev,next today",
           center: "title",
@@ -126,7 +129,9 @@ const StudentCalendar = ({ events = [] }) => {
               className="w-3 h-3 rounded-full" 
               style={{ backgroundColor: color }}
             />
-            <span className="text-xs font-medium text-gray-600">{category}</span>
+            <span className="text-xs font-medium text-gray-600">
+              {t(`common.categories.${category}`)}
+            </span>
           </div>
         ))}
       </div>

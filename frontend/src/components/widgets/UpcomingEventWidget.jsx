@@ -1,16 +1,18 @@
 import React from 'react';
 import { Calendar, MapPin, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from "react-i18next";
 
 export function UpcomingEventWidget({ event }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   if (!event) return (
     <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center py-10">
       <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
         <Calendar className="w-6 h-6 text-gray-300" />
       </div>
-      <p className="text-gray-400 text-sm font-medium">No upcoming events</p>
+      <p className="text-gray-400 text-sm font-medium">{t("widgets.upcomingEvent.noEvents")}</p>
     </div>
   );
 
@@ -23,7 +25,7 @@ export function UpcomingEventWidget({ event }) {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-3 left-3 px-3 py-1 bg-white/90 backdrop-blur-md rounded-lg text-[10px] font-black uppercase tracking-widest text-indigo-600 shadow-sm">
-          Featured
+          {t("widgets.upcomingEvent.featured")}
         </div>
       </div>
       <div className="p-4">
@@ -44,7 +46,7 @@ export function UpcomingEventWidget({ event }) {
           onClick={() => navigate(`/events/${event._id}`)}
           className="mt-4 w-full py-2 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-bold hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-2 active:scale-95"
         >
-          View Event <ArrowRight className="w-3 h-3" />
+          {t("widgets.upcomingEvent.viewEvent")} <ArrowRight className="w-3 h-3" />
         </button>
       </div>
     </div>

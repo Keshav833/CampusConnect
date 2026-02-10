@@ -4,6 +4,7 @@
     "register": "રજીસ્ટર કરો",
     "dashboard": "ડેશબોર્ડ",
     "myEvents": "મારા ઈવેન્ટ્સ",
+    "schedule": "શેડ્યૂલ",
     "profile": "પ્રોફાઇલ",
     "logout": "લોગઆઉટ",
     "createEvent": "નવી ઈવેન્ટ બનાવો",
@@ -19,12 +20,19 @@
     "categories": {
       "all": "બધી શ્રેણીઓ",
       "technical": "તકનીકી",
+      "Tech": "તકનીકી",
       "cultural": "સાંસ્કૃતિક",
+      "Cultural": "સાંસ્કૃતિક",
       "sports": "રમતગમત",
+      "Sports": "રમતગમત",
       "academic": "શૈક્ષણિક",
+      "Academic": "શૈક્ષણિક",
       "workshops": "વર્કશોપ",
+      "Workshops": "વર્કશોપ",
       "hackathons": "હેકાથોન",
-      "clubs": "ક્લબ"
+      "Hackathons": "હેકાથોન",
+      "clubs": "ક્લબ",
+      "Clubs": "ક્લબ"
     }
   },
   "landing": {
@@ -283,5 +291,39 @@
         "noResults": "તમારા ફિલ્ટર્સ સાથે મેળ ખાતી કોઈ ઇવેન્ટ મળી નથી."
       }
     }
+  },
+  "widgets": {
+    "upcomingEvent": {
+      "noEvents": "કોઈ આગામી ઈવેન્ટ નથી",
+      "featured": "વિશેષ",
+      "viewEvent": "ઈવેન્ટ જુઓ"
+    },
+    "agenda": {
+      "title": "આજનો એજન્ડા",
+      "events": "{{count}} ઈવેન્ટ્સ",
+      "allDay": "આખો દિવસ",
+      "noItems": "આજે કોઈ ઈવેન્ટ્સ શેડ્યૂલ નથી"
+    },
+    "recentActivity": {
+      "title": "તાજેતરની પ્રવૃત્તિ",
+      "items": {
+        "registered": "નવી ઈવેન્ટ માટે સફળતાપૂર્વક નોંધણી કરવામાં આવી",
+        "announcement": "આયોજક તરફથી નવી જાહેરાત",
+        "liked": "તમે એક ઈવેન્ટમાં રસ દર્શાવ્યો",
+        "time2h": "2 કલાક પહેલા",
+        "time4h": "4 કલાક પહેલા",
+        "yesterday": "ગઈકાલે"
+      }
+    }
   }
 }
+
+
+
+
+
+
+
+
+
+

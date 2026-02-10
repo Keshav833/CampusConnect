@@ -21,12 +21,19 @@
     "categories": {
       "all": "All Categories",
       "technical": "Technical",
+      "Tech": "Tech",
       "cultural": "Cultural",
+      "Cultural": "Cultural",
       "sports": "Sports",
+      "Sports": "Sports",
       "academic": "Academic",
+      "Academic": "Academic",
       "workshops": "Workshops",
+      "Workshops": "Workshops",
       "hackathons": "Hackathons",
-      "clubs": "Clubs"
+      "Hackathons": "Hackathons",
+      "clubs": "Clubs",
+      "Clubs": "Clubs"
     }
   },
   "landing": {
@@ -131,7 +138,24 @@
       "successTitle": "You’re registered!",
       "successText": "We've added this event to your events. See you there!",
       "viewMyEvents": "View My Events",
-      "backToDetails": "Back to Details"
+      "backToDetails": "Back to Details",
+      "active": "ACTIVE",
+      "date": "Date",
+      "time": "Time",
+      "location": "Location",
+      "registration": "Registration",
+      "sold": "SOLD",
+      "notifyMe": "Notify Me",
+      "reminderSet": "Reminder Set",
+      "addToCalendar": "Add to Google Calendar",
+      "share": "Share",
+      "checkOut": "Check out this event:",
+      "linkCopied": "Link Copied!",
+      "youreIn": "You're In!",
+      "registrationSuccess": "Registration successful. We've added this event to your calendar and sent a confirmation.",
+      "eventClosed": "Event Closed",
+      "openForStudents": "Open for students",
+      "fullCapacity": "Full Capacity"
     },
     "feedback": {
       "title": "Share Your Feedback",
@@ -150,6 +174,55 @@
       "searchPlaceholder": "Search by event name...",
       "download": "Download",
       "noCertificates": "No certificates found"
+    },
+    "dashboard": {
+      "welcome": "Welcome back, Student!",
+      "activeRegistrations": "You have {{count}} active registrations. Don't miss out on upcoming campus activities.",
+      "discoverNew": "Discover New Events",
+      "stats": {
+        "myRegistrations": "My Registrations",
+        "availableEvents": "Available Events",
+        "upcomingSoon": "Upcoming Soon"
+      },
+      "recommended": "Recommended for You",
+      "viewAll": "View All",
+      "calendar": "Calendar",
+      "agenda": "Agenda",
+      "activity": "Activity"
+    },
+    "schedule": {
+      "title": "Academic Calendar",
+      "loading": "Loading your academic calendar...",
+      "error": "Failed to load your schedule. Please try again later.",
+      "quickInfo": "Quick Info",
+      "registeredEvents": "Registered Events",
+      "upcomingThisWeek": "Upcoming This Week",
+      "participationNote": "Participation Note",
+      "noteText": "Registered events appear automatically on your calendar. Click on any event to view detailed information, venue maps, and attendance QR codes."
+    }
+  },
+  "widgets": {
+    "upcomingEvent": {
+      "noEvents": "No upcoming events",
+      "featured": "Featured",
+      "viewEvent": "View Event"
+    },
+    "agenda": {
+      "title": "Today's Agenda",
+      "events": "{{count}} Events",
+      "allDay": "All Day",
+      "noItems": "No items scheduled for today"
+    },
+    "recentActivity": {
+      "title": "Recent Activity",
+      "items": {
+        "registered": "Registered for Tech Meetup",
+        "announcement": "New announcement in CS Club",
+        "liked": "You liked Design Workshop",
+        "time2h": "2h ago",
+        "time4h": "4h ago",
+        "yesterday": "Yesterday"
+      }
     }
   },
   "organizer": {

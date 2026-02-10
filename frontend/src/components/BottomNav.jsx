@@ -14,7 +14,9 @@ export function BottomNav({ role }) {
 
   const menuItems = {
     student: [
+      { id: "dashboard", label: t("common.dashboard"), path: "/dashboard", icon: LayoutDashboard },
       { id: "discover", label: t("common.discover"), path: "/events", icon: Search },
+      { id: "schedule", label: t("common.schedule"), path: "/schedule", icon: Calendar },
       { id: "my-events", label: t("common.myEvents"), path: "/my-events", icon: History },
     ],
     organizer: [

@@ -6,7 +6,7 @@ import { Loader2, Calendar } from "lucide-react"
 import axios from "axios"
 
 export default function Events() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [events, setEvents] = useState([])
   const [registrations, setRegistrations] = useState([])
   const [loading, setLoading] = useState(true)
@@ -27,8 +27,9 @@ export default function Events() {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("token")
+        const lang = i18n.language;
         const [eventsRes, regsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events`),
+          axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/events?lang=${lang}`),
           axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/registrations/my`, {
             headers: { Authorization: `Bearer ${token}` }
           }).catch(() => ({ data: [] }))
@@ -47,7 +48,7 @@ export default function Events() {
       }
     }
     fetchData()
-  }, [])
+  }, [i18n.language])
 
   const filteredEvents = useMemo(() => {
     if (!Array.isArray(events)) return []

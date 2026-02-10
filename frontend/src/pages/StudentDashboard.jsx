@@ -48,9 +48,9 @@ export default function StudentDashboard() {
   }, []);
 
   const stats = [
-    { label: "My Registrations", value: registrations.length, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-    { label: "Available Events", value: events.length, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
-    { label: "Upcoming Soon", value: events.filter(e => new Date(e.startDate || e.date) > new Date()).length, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: t("student.dashboard.stats.myRegistrations"), value: registrations.length, icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+    { label: t("student.dashboard.stats.availableEvents"), value: events.length, icon: Calendar, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: t("student.dashboard.stats.upcomingSoon"), value: events.filter(e => new Date(e.startDate || e.date) > new Date()).length, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
   ];
 
   const upcomingEvent = events.filter(e => new Date(e.startDate || e.date) > new Date()).sort((a,b) => new Date(a.startDate || a.date) - new Date(b.startDate || b.date))[0];
@@ -72,10 +72,10 @@ export default function StudentDashboard() {
         <div className="bg-gradient-to-r from-indigo-600 to-purple-700 rounded-3xl p-8 text-white shadow-xl shadow-indigo-200/50 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative">
           <div className="relative z-10 text-center md:text-left">
             <h1 className="text-3xl font-black mb-2 animate-in slide-in-from-left duration-500">
-              Welcome back, Student! 👋
+              {t("student.dashboard.welcome")} 👋
             </h1>
             <p className="text-indigo-100 opacity-90 max-w-sm">
-              You have {registrations.length} active registrations. Don't miss out on upcoming campus activities.
+              {t("student.dashboard.activeRegistrations", { count: registrations.length })}
             </p>
           </div>
           <button 
@@ -83,7 +83,7 @@ export default function StudentDashboard() {
             className="relative z-10 bg-white text-indigo-600 px-6 py-3 rounded-2xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2 shrink-0 shadow-lg active:scale-95"
           >
             <PlusCircle className="w-5 h-5" />
-            Discover New Events
+            {t("student.dashboard.discoverNew")}
           </button>
           {/* Decorative Elements */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
@@ -110,10 +110,10 @@ export default function StudentDashboard() {
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-indigo-600" />
-              Recommended for You
+              {t("student.dashboard.recommended")}
             </h3>
             <button onClick={() => navigate("/events")} className="text-xs font-bold text-indigo-600 hover:underline">
-              View All
+              {t("student.dashboard.viewAll")}
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -151,17 +151,17 @@ export default function StudentDashboard() {
           <UpcomingEventWidget event={upcomingEvent} />
           
           <div className="widget-wrapper">
-             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-2">Calendar</h4>
+             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-2">{t("student.dashboard.calendar")}</h4>
              <MiniCalendarWidget events={registrations} />
           </div>
 
           <div className="widget-wrapper">
-             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-2">Agenda</h4>
+             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-2">{t("student.dashboard.agenda")}</h4>
              <AgendaWidget events={registrations} />
           </div>
 
           <div className="widget-wrapper">
-             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-2">Activity</h4>
+             <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 px-2">{t("student.dashboard.activity")}</h4>
              <RecentActivityWidget />
           </div>
         </div>

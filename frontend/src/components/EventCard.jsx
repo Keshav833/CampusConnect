@@ -6,14 +6,41 @@ import { MapPin, ChevronDown, Calendar, Ticket, Laptop, Music, Trophy, Wrench, R
 export function EventCard({ id, title, category, description, startDate, endDate, date, time, endTime, venue, image, organizerName, registeredCount, totalSeats, status, view = "grid", detailPath }) {
   const { t, i18n } = useTranslation();
   
+  const slugify = (text) => {
+    return text
+      ?.toLowerCase()
+      .replace(/&/g, 'and')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  };
+
   // Handle localized description object or plain string
   let displayDescription = "";
-  if (description) {
-    if (typeof description === 'object') {
-      displayDescription = description[i18n.language] || description.en || Object.values(description)[0] || "";
-    } else {
-      displayDescription = description;
+  let displayTitle = title;
+
+  if (title) {
+    const slug = slugify(title);
+    const titleKey = `content:${slug}.title`;
+    const descKey = `content:${slug}.description`;
+    
+    // Check if translation exists for the specific language (never use English fallback keys)
+    const translatedTitle = t(titleKey, { lng: i18n.language, fallbackLng: false });
+    const translatedDesc = t(descKey, { lng: i18n.language, fallbackLng: false });
+
+    // Ensure it's not the key itself (handles different i18next missing key formats)
+    const isKey = (val, key) => !val || val === key || val.includes('.title') || val.includes('.description') || val.startsWith('content:');
+
+    if (!isKey(translatedTitle, titleKey)) {
+      displayTitle = translatedTitle;
     }
+    
+    if (!isKey(translatedDesc, descKey)) {
+      displayDescription = translatedDesc;
+    }
+  }
+
+  if (!displayDescription && description) {
+    displayDescription = description;
   }
 
   // Category to Icon mapping
@@ -80,7 +107,7 @@ export function EventCard({ id, title, category, description, startDate, endDate
               </span>
             </div>
             <h2 className="text-base font-black text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors truncate mb-1">
-              {title}
+              {displayTitle}
             </h2>
             <p className="text-gray-500 text-[11px] line-clamp-2 leading-relaxed font-medium opacity-80">
               {displayDescription}
@@ -194,7 +221,7 @@ export function EventCard({ id, title, category, description, startDate, endDate
           </div>
           
           <h2 className="text-sm font-black text-gray-900 mb-1 leading-tight group-hover:text-indigo-600 transition-colors line-clamp-1">
-            {title}
+            {displayTitle}
           </h2>
           
           <div className="flex items-center gap-1.5 text-gray-400 mb-2">

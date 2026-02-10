@@ -1,9 +1,11 @@
 import React from 'react';
 import { Clock, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from "react-i18next";
 
 export function AgendaWidget({ events = [] }) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const today = new Date().toISOString().split('T')[0];
   
   const todayEvents = events.filter(e => (e.startDate || e.date) === today);
@@ -11,9 +13,9 @@ export function AgendaWidget({ events = [] }) {
   return (
     <div className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-gray-900 text-sm">Today's Agenda</h3>
+        <h3 className="font-bold text-gray-900 text-sm">{t("widgets.agenda.title")}</h3>
         <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded-md text-[9px] font-black uppercase">
-          {todayEvents.length} Events
+          {t("widgets.agenda.events", { count: todayEvents.length })}
         </span>
       </div>
 
@@ -31,7 +33,7 @@ export function AgendaWidget({ events = [] }) {
               <div className="flex items-center gap-3 mt-2">
                 <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
                   <Clock className="w-3 h-3" />
-                  {event.time || "All Day"}
+                  {event.time || t("widgets.agenda.allDay")}
                 </div>
                 <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
                   <MapPin className="w-3 h-3" />
@@ -42,7 +44,7 @@ export function AgendaWidget({ events = [] }) {
           ))
         ) : (
           <div className="text-center py-6">
-            <p className="text-gray-400 text-xs italic">No items scheduled for today</p>
+            <p className="text-gray-400 text-xs italic">{t("widgets.agenda.noItems")}</p>
           </div>
         )}
       </div>
