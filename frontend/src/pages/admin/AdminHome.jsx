@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
 const AdminHome = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [stats, setStats] = useState({
     pendingEvents: 0,
     approvedEvents: 0,
@@ -36,6 +36,8 @@ const AdminHome = () => {
 
     fetchData();
   }, []);
+
+  const getTitle = (tObj) => typeof tObj === 'object' ? (tObj[i18n.language] || tObj.en || Object.values(tObj)[0]) : tObj
 
   if (loading) return <div>Loading dashboard...</div>;
 
@@ -77,7 +79,7 @@ const AdminHome = () => {
               {pendingPreview.length > 0 ? (
                 pendingPreview.map(event => (
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-zinc-900">{getTitle(event.title)}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">
                       {new Date(event.startDate || event.date).toLocaleDateString()}

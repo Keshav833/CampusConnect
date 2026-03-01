@@ -14,20 +14,19 @@ export function EventCard({ id, title, category, description, startDate, endDate
       .replace(/^_+|_+$/g, '');
   };
 
-  // Handle localized description object or plain string
-  let displayDescription = "";
-  let displayTitle = title;
+  // Handle localized title and description objects
+  let displayTitle = typeof title === 'object' ? (title[i18n.language] || title.en || Object.values(title)[0] || "") : (title || "");
+  let displayDescription = typeof description === 'object' ? (description[i18n.language] || description.en || Object.values(description)[0] || "") : (description || "");
 
-  if (title) {
-    const slug = slugify(title);
+  if (displayTitle) {
+    const slug = slugify(displayTitle);
     const titleKey = `content:${slug}.title`;
     const descKey = `content:${slug}.description`;
     
-    // Check if translation exists for the specific language (never use English fallback keys)
+    // Check if translation exists for the specific language
     const translatedTitle = t(titleKey, { lng: i18n.language, fallbackLng: false });
     const translatedDesc = t(descKey, { lng: i18n.language, fallbackLng: false });
 
-    // Ensure it's not the key itself (handles different i18next missing key formats)
     const isKey = (val, key) => !val || val === key || val.includes('.title') || val.includes('.description') || val.startsWith('content:');
 
     if (!isKey(translatedTitle, titleKey)) {
@@ -37,10 +36,6 @@ export function EventCard({ id, title, category, description, startDate, endDate
     if (!isKey(translatedDesc, descKey)) {
       displayDescription = translatedDesc;
     }
-  }
-
-  if (!displayDescription && description) {
-    displayDescription = description;
   }
 
   // Category to Icon mapping

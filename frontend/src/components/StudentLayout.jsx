@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { PortalHeader } from './PortalHeader';
 import { BottomNav } from './BottomNav';
@@ -11,13 +11,22 @@ export default function StudentLayout() {
   const userData = JSON.parse(localStorage.getItem('userData') || '{}');
   const [unreadCount, setUnreadCount] = useState(0);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const location = useLocation();
+
+  // Full-bleed pages that need no padding and fill height completely
+  const isFullBleed = /^\/events\/[^/]+\/chat$/.test(location.pathname);
 
   useEffect(() => {
-    if (!token || userRole !== 'student' || !userData.id) return;
+    if (!token || userRole !== 'student') return;
 
-    const socket = io(import.meta.env.VITE_BACKEND_URL);
+    let backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    if (!backendUrl.startsWith("http://") && !backendUrl.startsWith("https://")) {
+      backendUrl = "http://" + backendUrl;
+    }
+    const socket = io(backendUrl);
 
-    socket.emit("join", userData.id);
+    const targetId = userData._id || userData.id;
+    if (targetId) socket.emit("join", targetId);
 
     socket.on("notification", (data) => {
       console.log("New notification received:", data);
@@ -49,11 +58,23 @@ export default function StudentLayout() {
         {/* Header - Floating Top */}
         <PortalHeader unreadNotifications={unreadCount} />
 
-        {/* Main Content Container - Scrollable */}
-        <main className="flex-1 bg-white md:rounded-[20px] p-4 md:p-6 shadow-sm overflow-y-auto border-t md:border border-gray-100/50">
-          <div className="max-w-[1600px] mx-auto">
-            <Outlet />
-          </div>
+        {/* Main Content Container */}
+        <main
+          className={`flex-1 bg-white md:rounded-[20px] shadow-sm border-t md:border border-gray-100/50 ${
+            isFullBleed
+              ? "p-0 overflow-hidden"
+              : "p-4 md:p-6 overflow-y-auto"
+          }`}
+        >
+          {isFullBleed ? (
+            <div className="h-full w-full">
+              <Outlet />
+            </div>
+          ) : (
+            <div className="max-w-[1600px] mx-auto">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
 

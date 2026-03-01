@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
 const AdminAllEvents = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -45,6 +45,8 @@ const AdminAllEvents = () => {
   };
 
   if (loading) return <div className="p-8 text-center text-zinc-500 font-medium">{t("common.loading")}</div>;
+
+  const getTitle = (tObj) => typeof tObj === 'object' ? (tObj[i18n.language] || tObj.en || Object.values(tObj)[0]) : tObj
 
   return (
     <div className="space-y-6">
@@ -93,7 +95,7 @@ const AdminAllEvents = () => {
               {events.length > 0 ? (
                 events.map(event => (
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-zinc-900">{getTitle(event.title)}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${getStatusClass(event.status)}`}>

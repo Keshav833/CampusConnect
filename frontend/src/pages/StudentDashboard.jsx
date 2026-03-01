@@ -132,7 +132,7 @@ export default function StudentDashboard() {
                       {event.category}
                     </span>
                     <h4 className="font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">
-                      {event.title}
+                      {typeof event.title === 'object' ? (event.title.en || Object.values(event.title)[0]) : event.title}
                     </h4>
                     <p className="text-xs text-gray-500 truncate mt-1">
                       {event.venue}

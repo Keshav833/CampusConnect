@@ -13,6 +13,7 @@ import Certificates from "../pages/Certificates";
 import Schedule from "../pages/Schedule";
 import StudentDashboard from "../pages/StudentDashboard";
 import OrganizerEventDetail from "../pages/OrganizerEventDetail";
+import EventChatPage from "../pages/EventChatPage";
 
 import StudentLayout from "../components/StudentLayout";
 import OrganizerLayout from "../components/OrganizerLayout";
@@ -37,7 +38,11 @@ export default function AppRoutes() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/my-events" element={<MyEvents />} />
         <Route path="/notifications" element={<Notifications />} />
-        <Route path="/events/:id" element={<EventDetails />} />
+        <Route path="/events/:id" element={<EventDetails />}>
+          <Route index element={<div className="p-4">Overview</div>} /> {/* Temporary, will shift logic from EventDetails */}
+          <Route path="chat" element={<EventChatPage />} />
+          <Route path="schedule" element={<div className="p-4">Schedule</div>} />
+        </Route>
         <Route path="/schedule" element={<Schedule />} />
         <Route path="/feedback" element={<Feedback />} />
         <Route path="/certificates" element={<Certificates />} />

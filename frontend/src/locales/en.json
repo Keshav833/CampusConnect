@@ -155,7 +155,10 @@
       "registrationSuccess": "Registration successful. We've added this event to your calendar and sent a confirmation.",
       "eventClosed": "Event Closed",
       "openForStudents": "Open for students",
-      "fullCapacity": "Full Capacity"
+      "fullCapacity": "Full Capacity",
+      "overview": "Overview",
+      "schedule": "Schedule",
+      "joinChat": "Join Participant Chat"
     },
     "feedback": {
       "title": "Share Your Feedback",
@@ -361,5 +364,26 @@
         "noResults": "No events found matching your filters."
       }
     }
+  },
+  "eventChat": {
+    "openChat": "Event Chat",
+    "openChatRoom": "Open Chat Room",
+    "eventChat": "Event Chat",
+    "live": "Live",
+    "reconnecting": "Reconnecting...",
+    "online": "Online",
+    "noMessages": "No messages yet",
+    "beFirst": "Be the first to say something!",
+    "placeholder": "Type a message… (Enter to send)",
+    "organizer": "Organizer",
+    "you": "You",
+    "loginToChat": "Log in to join the conversation",
+    "chat": "Chat",
+    "people": "People",
+    "activePeople": "Active in Chat",
+    "info": "Info",
+    "backToEvent": "Back to Event",
+    "locked": "Chat Locked",
+    "lockedDesc": "You must be registered for this event to join the participant chat room and connect with others."
   }
 }

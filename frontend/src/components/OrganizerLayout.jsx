@@ -13,11 +13,16 @@ export default function OrganizerLayout() {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
-    if (!token || userRole !== 'organizer' || !userData.id) return;
+    if (!token || userRole !== 'organizer') return;
 
-    const socket = io(import.meta.env.VITE_BACKEND_URL);
+    let backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:5000";
+    if (!backendUrl.startsWith("http://") && !backendUrl.startsWith("https://")) {
+      backendUrl = "http://" + backendUrl;
+    }
+    const socket = io(backendUrl);
 
-    socket.emit("join", userData.id);
+    const targetId = userData._id || userData.id;
+    if (targetId) socket.emit("join", targetId);
 
     socket.on("notification", (data) => {
       console.log("New notification received:", data);

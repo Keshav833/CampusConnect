@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft } from 'lucide-react';
 
 const AdminEventDetail = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -55,6 +55,8 @@ const AdminEventDetail = () => {
   if (loading) return <div className="p-8 text-center text-zinc-500 font-medium">{t("common.loading")}</div>;
   if (!event) return <div className="p-8 text-center text-zinc-500 font-medium">{t("student.events.noResults")}</div>;
 
+  const getTitle = (tObj) => typeof tObj === 'object' ? (tObj[i18n.language] || tObj.en || Object.values(tObj)[0]) : tObj
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <header className="flex items-center gap-4">
@@ -71,7 +73,7 @@ const AdminEventDetail = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t("admin.eventReview.fields.title")}</h3>
-              <p className="text-lg font-semibold text-zinc-900">{event.title}</p>
+              <p className="text-lg font-semibold text-zinc-900">{getTitle(event.title)}</p>
             </div>
             <div className="space-y-1">
               <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t("admin.eventReview.fields.organizer")}</h3>
@@ -102,7 +104,7 @@ const AdminEventDetail = () => {
           <div className="space-y-2 pt-8 border-t border-zinc-100">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-widest">{t("admin.eventReview.fields.description")}</h3>
             <p className="text-zinc-600 leading-relaxed overflow-wrap-anywhere whitespace-pre-wrap">
-              {typeof event.description === 'object' ? (event.description.en || Object.values(event.description)[0]) : event.description}
+              {typeof event.description === 'object' ? (event.description[i18n.language] || event.description.en || Object.values(event.description)[0]) : event.description}
             </p>
           </div>
 

@@ -4,7 +4,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
 const AdminPendingEvents = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +52,8 @@ const AdminPendingEvents = () => {
 
   if (loading) return <div>Loading pending events...</div>;
 
+  const getTitle = (tObj) => typeof tObj === 'object' ? (tObj[i18n.language] || tObj.en || Object.values(tObj)[0]) : tObj
+
   return (
     <div className="space-y-6">
 
@@ -72,7 +74,7 @@ const AdminPendingEvents = () => {
               {events.length > 0 ? (
                 events.map(event => (
                   <tr key={event._id} className="hover:bg-zinc-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-zinc-900">{event.title}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-zinc-900">{getTitle(event.title)}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">{event.organizerId?.organization || event.organizerId?.name || event.organizerName}</td>
                     <td className="px-6 py-4 text-sm text-zinc-600">
                       <span className="px-2 py-1 bg-zinc-100 text-zinc-600 rounded text-xs font-medium">

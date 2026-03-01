@@ -8,6 +8,7 @@ const adminRoutes = require("./routes/admin.routes");
 const uploadRoutes = require("./routes/upload.routes");
 const registrationRoutes = require("./routes/registration.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const chatRoutes = require("./routes/chat.routes");
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/registrations", registrationRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/chat", chatRoutes);
 
 module.exports = app;

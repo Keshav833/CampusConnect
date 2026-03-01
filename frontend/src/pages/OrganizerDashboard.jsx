@@ -8,7 +8,7 @@ import { EventControlBar } from "@/components/EventControlBar"
 import { EventCard } from "@/components/EventCard"
 
 export default function OrganizerDashboard() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
   const [activeSection, setActiveSection] = useState("overview")
@@ -302,6 +302,8 @@ export default function OrganizerDashboard() {
   })
   const [isMultiDay, setIsMultiDay] = useState(false)
 
+  const getTitle = (tObj) => typeof tObj === 'object' ? (tObj[i18n.language] || tObj.en || Object.values(tObj)[0]) : tObj
+
   const renderContent = () => {
     switch (activeSection) {
       case "overview":
@@ -362,7 +364,7 @@ export default function OrganizerDashboard() {
                           )}
                         </div>
                         <div>
-                          <h4 className="font-semibold text-gray-900 line-clamp-1">{event.title}</h4>
+                          <h4 className="font-semibold text-gray-900 line-clamp-1">{getTitle(event.title)}</h4>
                           <p className="text-xs text-gray-500 mt-0.5">{event.date} • {event.category}</p>
                         </div>
                       </div>
@@ -547,7 +549,7 @@ export default function OrganizerDashboard() {
                                 onClick={() => navigate(`/organizer/event/${event._id}`)}
                                 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 cursor-pointer hover:text-indigo-600 transition-colors"
                               >
-                                {event.title}
+                                {getTitle(event.title)}
                               </h4>
                               <div className="space-y-2 mb-6 flex-1">
                                  <div className="flex items-center gap-2 text-sm text-gray-500">

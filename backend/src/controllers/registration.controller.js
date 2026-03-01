@@ -8,6 +8,10 @@ exports.registerForEvent = async (req, res) => {
     const { eventId } = req.body;
     const studentId = req.user.id;
 
+    if (!eventId) {
+      return res.status(400).json({ message: "Event ID is required" });
+    }
+
     // 1️⃣ Check event exists
     const event = await Event.findById(eventId);
     if (!event) {
@@ -19,38 +23,40 @@ exports.registerForEvent = async (req, res) => {
       return res.status(403).json({ message: "Event not open for registration" });
     }
 
-    // 3️⃣ Prevent duplicate registration
+    // 3️⃣ Prevent duplicate registration (Explicit Check)
     const existing = await Registration.findOne({
       studentId,
       eventId,
     });
 
     if (existing) {
-      return res.status(400).json({ message: "Already registered" });
+      return res.status(400).json({ message: "You are already registered for this event" });
     }
 
-    // Optional: Check capacity if totalSeats is defined
+    // 4️⃣ Check capacity
     const registeredCount = await Registration.countDocuments({ eventId, status: "registered" });
     if (event.totalSeats && registeredCount >= event.totalSeats) {
-        // Future: Handle waitlist here
         return res.status(400).json({ message: "Event is full" });
     }
 
+    // 5️⃣ Create Registration
     const registration = await Registration.create({
       studentId,
       eventId,
       status: "registered"
     });
 
-    // Create notification for student
+    // 6️⃣ Create Notification
+    const eventTitle = typeof event.title === 'object' ? (event.title.en || Object.values(event.title)[0]) : (event.title || 'Unknown Event');
+    
     const notification = await Notification.create({
       userId: studentId,
       title: "Registration Confirmed",
-      message: `You registered for ${event.title}`,
+      message: `You registered for ${eventTitle}`,
       type: "registration",
     });
 
-    // Emit live via socket
+    // 7️⃣ Socket Emit
     if (global.io) {
       global.io.to(studentId.toString()).emit("notification", notification);
     }
@@ -60,20 +66,46 @@ exports.registerForEvent = async (req, res) => {
       registration,
     });
   } catch (err) {
-    console.error("Registration error:", err);
-    res.status(500).json({ message: "Registration failed" });
+    console.error("Detailed Registration Error Log:", err);
+
+    // Duplicate key error (code 11000)
+    if (err.code === 11000) {
+      return res.status(400).json({ message: "You are already registered for this event" });
+    }
+
+    if (err.name === 'CastError') {
+      return res.status(400).json({ message: "Invalid ID format provided" });
+    }
+
+    if (err.name === 'ValidationError') {
+      return res.status(400).json({ message: "Validation failed", details: err.message });
+    }
+
+    res.status(500).json({ 
+      message: "An internal server error occurred during registration", 
+      error: err.message 
+    });
   }
 };
 
 // Check registration status for a specific event
 exports.checkRegistrationStatus = async (req, res) => {
   try {
-    const { eventId } = req.params;
-    const studentId = req.user.id;
+    const mongoose = require("mongoose");
+    const eventId = new mongoose.Types.ObjectId(req.params.eventId);
+    const studentId = new mongoose.Types.ObjectId(req.user.id);
 
     const registration = await Registration.findOne({ studentId, eventId });
+    
+    // Diagnostic logging
+    console.log(`Checking registration: Student[${studentId}] Event[${eventId}] -> ${!!registration}`);
+    
     res.json({ registered: !!registration });
   } catch (error) {
+    console.error("Status check error:", error);
+    if (error.name === 'CastError' || error.message.includes("ObjectId")) {
+      return res.json({ registered: false });
+    }
     res.status(500).json({ message: "Status check failed" });
   }
 };
@@ -142,6 +174,6 @@ exports.getMyRegistrations = async (req, res) => {
     res.json(registrations);
   } catch (error) {
     console.error("Error fetching my registrations:", error);
-    res.status(500).json({ message: "Failed to fetch registrations" });
+    res.status(500).json({ message: "Failed to fetch registrations", error: error.message });
   }
 };
