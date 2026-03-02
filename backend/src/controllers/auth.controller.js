@@ -46,7 +46,7 @@ exports.googleAuth = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -141,7 +141,7 @@ exports.githubCallback = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -199,7 +199,7 @@ exports.signup = async (req, res) => {
 
     // If Google Auth signup, return token immediately
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
@@ -252,7 +252,7 @@ exports.login = async (req, res) => {
       }
 
       const token = jwt.sign(
-        { id: user._id, role: 'admin' },
+        { id: user._id, role: 'admin', name: user.name },
         process.env.JWT_SECRET,
         { expiresIn: "7d" }
       );
@@ -281,7 +281,7 @@ exports.login = async (req, res) => {
     await user.save();
 
     const token = jwt.sign(
-      { id: user._id, role: user.role },
+      { id: user._id, role: user.role, name: user.name },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );

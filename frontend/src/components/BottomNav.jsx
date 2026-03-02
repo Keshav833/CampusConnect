@@ -6,7 +6,7 @@ import {
   CheckCircle, 
   Users
 } from "lucide-react"
-import { NavLink } from "react-router-dom"
+import { NavLink, useLocation } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
 export function BottomNav({ role }) {
@@ -32,8 +32,10 @@ export function BottomNav({ role }) {
   }
 
   const items = menuItems[role] || []
+  const location = useLocation()
 
   if (items.length === 0) return null
+  if (/^\/events\/[^/]+\/chat$/.test(location.pathname)) return null
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-2 pb-safe-area-inset-bottom z-50">

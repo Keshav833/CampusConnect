@@ -242,7 +242,7 @@ export default function EventDetails() {
         </div>
 
         {/* ── Tab Navigation ────────────────────────────── */}
-        <div className="sticky top-0 z-[50] bg-white/80 backdrop-blur-xl border-b border-gray-100 mb-8 py-2">
+        <div className={`sticky top-0 z-[50] bg-white/80 backdrop-blur-xl border-b border-gray-100 py-2 flex-none ${isChatOpen ? "mb-2" : "mb-8"}`}>
           <div className="flex items-center gap-1 md:gap-4">
             {tabs.map((tab) => (
               <button
@@ -266,7 +266,7 @@ export default function EventDetails() {
         </div>
 
         {/* ── Content Area ────────────────────────────── */}
-        <div className="min-h-[500px]">
+        <div className={`${isChatOpen ? "flex-1 min-h-0" : "min-h-[500px]"}`}>
           {activeTab === "overview" ? (
             <div className="flex flex-col lg:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
@@ -481,7 +481,7 @@ export default function EventDetails() {
                   <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px]">Verifying Access...</p>
                 </div>
               ) : hasAccess ? (
-                 <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden min-h-[700px] flex flex-col">
+                 <div className={`bg-white rounded-[2rem] md:rounded-[3rem] border border-gray-100 shadow-sm overflow-visible flex flex-col ${activeTab === "chat" ? "relative scroll-mt-24 min-h-[600px]" : "min-h-[700px]"}`}>
                     <Outlet />
                  </div>
               ) : (

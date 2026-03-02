@@ -13,8 +13,7 @@ import {
   Calendar,
   MapPin,
   Clock,
-  Hash,
-  Info
+  Bell
 } from "lucide-react"
 
 /* ─── Shared socket singleton ──────────────────────────────────── */
@@ -34,9 +33,9 @@ function getSocket() {
 /* ─── Avatar component ─────────────────────────────────────────── */
 function Avatar({ name, role, size = "md", showRing = false }) {
   const gradients = {
-    organizer: "linear-gradient(135deg,#6366f1,#4f46e5)",
-    student:   "linear-gradient(135deg,#8b5cf6,#6d28d9)",
-    default:   "linear-gradient(135deg,#64748b,#475569)",
+    organizer: "linear-gradient(135deg, #4f46e5, #7c3aed)",
+    student:   "linear-gradient(135deg, #6366f1, #a855f7)",
+    default:   "linear-gradient(135deg, #94a3b8, #64748b)",
   }
   const sizes = {
     xs: "w-6 h-6 text-[9px]",
@@ -46,10 +45,14 @@ function Avatar({ name, role, size = "md", showRing = false }) {
   }
   return (
     <div
-      className={`${sizes[size]} rounded-xl flex items-center justify-center font-black text-white flex-shrink-0 ${showRing ? "ring-2 ring-white/20" : ""}`}
-      style={{ background: gradients[role] || gradients.default, boxShadow: "0 4px 12px rgba(0,0,0,0.3)" }}
+      className={`${sizes[size]} rounded-xl flex items-center justify-center font-black text-white flex-shrink-0 relative group transition-transform hover:scale-105 ${showRing ? "ring-2 ring-white/20" : ""}`}
+      style={{ 
+        background: gradients[role] || gradients.default, 
+        boxShadow: "0 8px 20px -4px rgba(0,0,0,0.2)" 
+      }}
     >
-      {name?.charAt(0)?.toUpperCase() || "?"}
+      <span className="relative z-10">{name?.charAt(0)?.toUpperCase() || "?"}</span>
+      <div className="absolute inset-0 rounded-xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
     </div>
   )
 }
@@ -116,10 +119,14 @@ export default function EventChatPage() {
       .finally(() => setLoading(false))
   }, [id, token, i18n.language])
 
-  /* ── Auto-scroll ─────────────────────────────────────────────── */
+  /* ── Auto-scroll ─────────────────────────────── */
   useEffect(() => {
-    if (activeTab === "chat") {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (activeTab === "chat" && messages.length > 0) {
+      // Use a small timeout to ensure DOM is updated before scrolling
+      const timer = setTimeout(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" })
+      }, 100)
+      return () => clearTimeout(timer)
     }
   }, [messages, activeTab])
 
@@ -215,197 +222,606 @@ export default function EventChatPage() {
     </div>
   )
 
+// Replace render contents
   return (
-    <div className="flex flex-col h-full bg-white">
-      {/* Header Info Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/30">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="flex -space-x-2">
-            {participants.slice(0, 3).map((p, i) => (
-              <div key={p.id} className="w-8 h-8 rounded-full border-2 border-white overflow-hidden shadow-sm">
-                 <Avatar name={p.name} role={p.role} size="xs" />
-              </div>
-            ))}
-            {participants.length > 3 && (
-              <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-gray-500 shadow-sm">
-                +{participants.length - 3}
-              </div>
-            )}
-          </div>
-          <div className="min-w-0">
-            <h2 className="text-xs font-black text-gray-900 uppercase tracking-widest truncate">{t("eventChat.eventChat") || "Event Chat"}</h2>
-            <div className="flex items-center gap-2">
-              <div className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-red-500"} animate-pulse`} />
-              <span className="text-[10px] font-bold text-gray-400">
-                {connected ? t("eventChat.live") || "Connected" : t("eventChat.reconnecting") || "Connecting..."}
-              </span>
-              <span className="text-gray-200 text-[10px]">•</span>
-              <span className="text-[10px] font-bold text-indigo-600">
-                {onlineSet.size} {t("eventChat.online") || "Online"}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Inner Tab Switcher */}
-        <div className="flex gap-1 p-1 bg-gray-100/50 rounded-xl border border-gray-100">
-          {[
-            { id: "chat",   icon: MessageSquare, label: t("eventChat.chat") || "Chat" },
-            { id: "people", icon: Users,         label: t("eventChat.people") || "People" },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                activeTab === tab.id ? "bg-white text-indigo-600 shadow-sm border border-gray-100" : "text-gray-400 hover:text-gray-600"
-              }`}
-            >
-              <tab.icon className="w-3 h-3" />
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto relative scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+    <div className="event-chat-v2 layout">
+      <div className="chat-panel">
         
-        {/* ── Chat Tab ── */}
-        {activeTab === "chat" && (
-          <div className="px-6 py-6 space-y-1">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full py-20 gap-4 opacity-50 text-center px-10">
-                <div className="w-20 h-20 bg-gray-50 rounded-[2.5rem] flex items-center justify-center shadow-inner">
-                   <MessageSquare className="w-10 h-10 text-gray-300" />
-                </div>
-                <div>
-                  <p className="text-sm font-black text-gray-900">{t("eventChat.noMessages") || "No messages yet"}</p>
-                  <p className="text-xs font-medium text-gray-400 mt-1">{t("eventChat.beFirst") || "Start the first conversation with fellow participants!"}</p>
-                </div>
+        {/* Header */}
+        <div className="chat-header">
+          <div className="chat-header-left">
+            <div className="avatar">
+              {displayTitle.charAt(0)?.toUpperCase() || "E"}
+            </div>
+            <div className="chat-header-info">
+              <h3>{displayTitle || "Event Chat"}</h3>
+              <div className="chat-header-meta">
+                <span className="status-badge">
+                  <span className={`live-dot ${connected ? '' : 'offline'}`} 
+                        style={!connected ? { background: '#ef4444', boxShadow: '0 0 0 2px rgba(239,68,68,0.25)', animation: 'none' } : {}}>
+                  </span>
+                  {connected ? "Live" : "Reconnecting..."}
+                </span>
+                <span className="online-count">{onlineSet.size} Online</span>
               </div>
-            ) : (
-              Object.entries(grouped).map(([dateLabel, msgs]) => (
-                <div key={dateLabel}>
-                  <div className="flex items-center gap-4 my-8">
-                    <div className="flex-1 h-px bg-gray-100" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-gray-400">{dateLabel}</span>
-                    <div className="flex-1 h-px bg-gray-100" />
-                  </div>
-                  {msgs.map((msg, idx) => {
-                    const isMe = msg.senderId === userId || msg._opt
-                    const prev = msgs[idx - 1]
-                    const isCont = prev && prev.senderId === msg.senderId
-                    return (
-                      <div key={msg._id} className={`flex ${isMe ? "justify-end" : "justify-start"} ${isCont ? "mt-0.5" : "mt-4"}`}>
-                        {!isMe && !isCont && (
-                          <div className="mr-3">
-                            <Avatar name={msg.senderName} role={msg.senderRole} size="sm" />
-                          </div>
-                        )}
-                        {!isMe && isCont && <div className="w-11" />}
-                        
-                        <div className={`flex flex-col max-w-[75%] ${isMe ? "items-end" : "items-start"}`}>
-                          {!isMe && !isCont && (
-                            <span className="text-[10px] font-black text-gray-400 mb-1.5 flex items-center gap-2 ml-1">
-                              {msg.senderName}
-                              {msg.senderRole === "organizer" && (
-                                <span className="text-[8px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full border border-indigo-100/50 font-black">ORGANIZER</span>
-                              )}
-                            </span>
-                          )}
-                          <div className={`px-4 py-2.5 rounded-2xl text-[13px] font-medium leading-relaxed ${
-                            isMe 
-                              ? "bg-indigo-600 text-white shadow-xl shadow-indigo-100/50 rounded-tr-none" 
-                              : "bg-gray-100 text-gray-800 rounded-tl-none border border-gray-200/50"
-                          } ${msg._opt ? "opacity-50" : ""}`}>
-                            {msg.text}
-                          </div>
-                          <span className="text-[9px] text-gray-300 font-bold mt-1.5 mx-1 uppercase tracking-tighter">{fmtTime(msg.createdAt)}</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              ))
-            )}
-            <div ref={bottomRef} className="h-4" />
-          </div>
-        )}
-
-        {/* ── People Tab ── */}
-        {activeTab === "people" && (
-          <div className="p-8 space-y-3">
-            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6 px-2">
-              {participants.length} {t("eventChat.participants") || "Participants"}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {participants.map((p) => {
-                const isOnline = onlineSet.has(p.id)
-                const isMe = p.id === userId
-                return (
-                  <div key={p.id} className="flex items-center gap-4 p-4 rounded-3xl bg-white border border-gray-100 hover:shadow-lg hover:shadow-indigo-50/50 transition-all group">
-                    <div className="relative">
-                      <Avatar name={p.name} role={p.role} size="md" />
-                      <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${isOnline ? "bg-emerald-500" : "bg-gray-200"}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-black text-gray-900 truncate group-hover:text-indigo-600 transition-colors">{p.name}</span>
-                        {isMe && <span className="text-[8px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full font-black uppercase">You</span>}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${isOnline ? "text-emerald-500" : "text-gray-400"}`}>
-                          {isOnline ? "Online" : "Away"}
-                        </span>
-                        {p.role === "organizer" && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-200 text-[10px]">|</span>
-                            <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">Organizer</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
             </div>
           </div>
-        )}
-      </div>
+          <div className="chat-header-right">
+            <button className={`toggle-btn ${activeTab === 'chat' ? 'active' : 'inactive'}`} onClick={() => setActiveTab('chat')}>
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Chat
+            </button>
+            <button className={`toggle-btn ${activeTab === 'people' ? 'active' : 'inactive'}`} onClick={() => setActiveTab('people')}>
+              <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              People
+            </button>
+          </div>
+        </div>
 
-      {/* Input Area */}
-      {activeTab === "chat" && (
-        <div className="p-6 border-t border-gray-100 bg-gray-50/20">
-          <div className="relative flex items-end gap-3 rounded-[1.5rem] bg-white border border-gray-200 p-2.5 focus-within:border-indigo-600/30 focus-within:shadow-xl focus-within:shadow-indigo-50 transition-all">
+        {/* Messages */}
+        <div className="messages" id="messages">
+          {messages.length === 0 ? (
+            <div className="text-center text-slate-400 mt-10 font-medium text-sm">
+              Silence is golden... but words are better. 🤫
+            </div>
+          ) : (
+            Object.entries(grouped).map(([dateLabel, msgs]) => (
+              <div key={dateLabel}>
+                <div className="date-divider">{dateLabel}</div>
+                {msgs.map((msg) => {
+                  const isMe = msg.senderId === userId || msg._opt;
+                  const gradient = msg.senderRole === 'organizer' 
+                    ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' 
+                    : (isMe ? 'linear-gradient(135deg, #4F46E5, #818CF8)' : 'linear-gradient(135deg, #94a3b8, #64748b)');
+
+                  return (
+                    <div key={msg._id} className={`msg-row ${isMe ? 'own' : ''} ${msg._opt ? 'opacity-60' : ''}`}>
+                      <div className="msg-avatar" style={{ background: gradient }}>
+                        {msg.senderName?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div className="msg-content">
+                        {!isMe && <span className="msg-name">{msg.senderName}</span>}
+                        <div className="msg-bubble">{msg.text}</div>
+                        <span className="msg-time">{fmtTime(msg.createdAt)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))
+          )}
+          <div ref={bottomRef} className="h-2" />
+        </div>
+
+        {/* Input Bar */}
+        <div className="input-bar pb-[max(32px,env(safe-area-inset-bottom))]">
+          <div className="input-container">
+            <div className="input-actions-left">
+              <button className="icon-btn" title="Attach file">
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+              </button>
+              <button className="icon-btn" title="Emoji">
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2M9 9h.01M15 9h.01"/></svg>
+              </button>
+            </div>
             <textarea
               ref={inputRef}
-              rows={1}
+              className="msg-input"
+              placeholder="Type a message…"
+              rows="1"
               value={text}
-              onChange={(e) => setText(e.target.value)}
+              onChange={(e) => {
+                setText(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+              }}
               onKeyDown={handleKey}
-              placeholder={t("eventChat.placeholder") || "Share something with the team..."}
-              className="flex-1 bg-transparent border-none outline-none text-sm py-2 px-4 resize-none text-gray-800 placeholder:text-gray-300 leading-relaxed font-medium"
-              style={{ maxHeight: "120px" }}
             />
-            <button
-              onClick={handleSend}
-              disabled={!text.trim() || sending}
-              className={`w-11 h-11 flex items-center justify-center rounded-2xl transition-all active:scale-90 ${
-                text.trim() && !sending 
-                  ? "bg-indigo-600 text-white shadow-xl shadow-indigo-200 hover:bg-indigo-700" 
-                  : "bg-gray-50 text-gray-200 cursor-not-allowed"
-              }`}
-            >
-              {sending ? <div className="w-5 h-5 border-3 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5" />}
+            <button className="send-btn" onClick={handleSend} disabled={!text.trim() || sending}>
+              {sending ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              )}
             </button>
           </div>
         </div>
-      )}
-      
+
+      </div>
+
+      {/* PEOPLE SIDEBAR */}
+      <div className={`people-panel ${activeTab === 'people' ? 'open !max-w-full md:!max-w-[260px]' : ''}`}>
+        <div className="people-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span>Participants · {participants.length}</span>
+          <button onClick={() => setActiveTab('chat')} className="md:hidden" style={{ width: '26px', height: '26px', borderRadius: '7px', border: 'none', background: 'var(--bg)', color: 'var(--muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div className="people-list">
+          {participants.map((p) => {
+            const isOnline = onlineSet.has(p.id);
+            const isMe = p.id === userId;
+            const gradient = p.role === 'organizer' 
+              ? 'linear-gradient(135deg, #4f46e5, #7c3aed)' 
+              : (isMe ? 'linear-gradient(135deg, #4F46E5, #818CF8)' : 'linear-gradient(135deg, #94a3b8, #64748b)');
+
+            return (
+              <div key={p.id} className="person-row">
+                <div className="person-avatar" style={{ background: gradient }}>
+                  {p.name?.charAt(0)?.toUpperCase()}
+                  {isOnline && <span className="person-online-dot"></span>}
+                </div>
+                <span className="person-name">{p.name} {isMe && "(You)"}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Injected CSS strictly scoped to .event-chat-v2 */}
       <style>{`
-        .scrollbar-thin::-webkit-scrollbar { width: 4px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+        .event-chat-v2 {
+          --indigo: #4F46E5;
+          --indigo-dark: #3730A3;
+          --indigo-light: #EEF2FF;
+          --indigo-mid: #818CF8;
+          --surface: #FAFAFA;
+          --bg: #F4F4F8;
+          --text: #1E1B4B;
+          --muted: #6B7280;
+          --border: #E5E7EB;
+          --white: #FFFFFF;
+          --online: #22C55E;
+          --radius: 16px;
+          --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(79,70,229,.08);
+          
+          font-family: 'DM Sans', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          display: flex;
+          height: 100%;
+          width: 100%;
+          overflow: hidden;
+          position: relative; /* For mobile absolute sidebar if needed */
+        }
+
+        .event-chat-v2 .layout {
+          display: flex;
+          flex: 1;
+          overflow: hidden;
+          gap: 0;
+          width: 100%;
+          height: 100%;
+        }
+
+        .event-chat-v2 .chat-panel {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          background: var(--white);
+          overflow: hidden;
+          min-width: 0;
+        }
+
+        .event-chat-v2 .chat-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 16px 24px;
+          border-bottom: 1px solid var(--border);
+          background: var(--white);
+          flex-shrink: 0;
+          height: 72px; /* Fixed height for consistent flex layout */
+        }
+
+        .event-chat-v2 .chat-header-left {
+          display: flex;
+          align-items: center;
+          gap: 14px;
+          min-width: 0;
+        }
+
+        .event-chat-v2 .avatar {
+          width: 40px; height: 40px;
+          border-radius: 12px;
+          background: linear-gradient(135deg, var(--indigo), var(--indigo-mid));
+          display: flex; align-items: center; justify-content: center;
+          font-size: 16px;
+          font-weight: 700;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .event-chat-v2 .chat-header-info {
+           min-width: 0;
+        }
+
+        .event-chat-v2 .chat-header-info h3 {
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: .05em;
+          text-transform: uppercase;
+          color: var(--text);
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .event-chat-v2 .chat-header-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-top: 3px;
+        }
+
+        .event-chat-v2 .status-badge {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12px;
+          font-weight: 500;
+          color: var(--online);
+        }
+
+        .event-chat-v2 .online-count {
+          font-size: 11px;
+          color: var(--muted);
+          background: var(--indigo-light);
+          padding: 2px 8px;
+          border-radius: 20px;
+          font-weight: 500;
+          color: var(--indigo);
+        }
+
+        .event-chat-v2 .chat-header-right {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-shrink: 0;
+        }
+
+        .event-chat-v2 .toggle-btn {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          padding: 7px 14px;
+          border-radius: 10px;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: .04em;
+          cursor: pointer;
+          border: none;
+          transition: all .2s;
+        }
+
+        .event-chat-v2 .toggle-btn.active {
+          background: var(--indigo);
+          color: white;
+          box-shadow: 0 2px 8px rgba(79,70,229,.3);
+        }
+
+        .event-chat-v2 .toggle-btn.inactive {
+          background: var(--bg);
+          color: var(--muted);
+        }
+
+        .event-chat-v2 .toggle-btn:hover:not(.active) {
+          background: var(--indigo-light);
+          color: var(--indigo);
+        }
+
+        .event-chat-v2 .messages {
+          flex: 1;
+          max-height: 50vh;
+          margin-top: auto;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          background: var(--surface);
+          scroll-behavior: smooth;
+        }
+
+        .event-chat-v2 .messages::-webkit-scrollbar { width: 4px; }
+        .event-chat-v2 .messages::-webkit-scrollbar-track { background: transparent; }
+        .event-chat-v2 .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+        .event-chat-v2 .date-divider {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin: 16px 0 8px;
+          color: var(--muted);
+          font-size: 11px;
+          font-weight: 600;
+          letter-spacing: .06em;
+          text-transform: uppercase;
+        }
+
+        .event-chat-v2 .date-divider::before, 
+        .event-chat-v2 .date-divider::after {
+          content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+
+        .event-chat-v2 .msg-row {
+          display: flex;
+          gap: 10px;
+          padding: 4px 0;
+          align-items: flex-end;
+          animation: fadeUp .25s ease;
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .event-chat-v2 .msg-row.own {
+          flex-direction: row-reverse;
+        }
+
+        .event-chat-v2 .msg-avatar {
+          width: 30px; height: 30px;
+          border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 11px;
+          font-weight: 700;
+          color: white;
+          flex-shrink: 0;
+        }
+
+        .event-chat-v2 .msg-content {
+          max-width: 70%;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+
+        .event-chat-v2 .msg-row.own .msg-content { align-items: flex-end; }
+
+        .event-chat-v2 .msg-name {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--muted);
+          padding: 0 4px;
+          letter-spacing: .02em;
+        }
+
+        .event-chat-v2 .msg-bubble {
+          padding: 10px 14px;
+          border-radius: 14px;
+          font-size: 14px;
+          line-height: 1.5;
+          position: relative;
+          word-break: break-word;
+          white-space: pre-wrap;
+        }
+
+        .event-chat-v2 .msg-row:not(.own) .msg-bubble {
+          background: var(--white);
+          color: var(--text);
+          border: 1px solid var(--border);
+          border-bottom-left-radius: 4px;
+          box-shadow: var(--shadow);
+        }
+
+        .event-chat-v2 .msg-row.own .msg-bubble {
+          background: linear-gradient(135deg, var(--indigo) 0%, #6366F1 100%);
+          color: white;
+          border-bottom-right-radius: 4px;
+          box-shadow: 0 2px 8px rgba(79,70,229,.3);
+        }
+
+        .event-chat-v2 .msg-time {
+          font-size: 10px;
+          color: var(--muted);
+          padding: 0 4px;
+          opacity: .7;
+        }
+
+        .event-chat-v2 .input-bar {
+          padding: 16px 24px;
+          background: var(--white);
+          border-top: 1px solid var(--border);
+          flex-shrink: 0;
+        }
+
+        .event-chat-v2 .input-container {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: var(--bg);
+          border: 1.5px solid var(--border);
+          border-radius: 14px;
+          padding: 8px 8px 8px 16px;
+          transition: border-color .2s, box-shadow .2s;
+        }
+
+        .event-chat-v2 .input-container:focus-within {
+          border-color: var(--indigo-mid);
+          box-shadow: 0 0 0 3px rgba(79,70,229,.1);
+          background: var(--white);
+        }
+
+        .event-chat-v2 .input-actions-left {
+          display: flex;
+          gap: 4px;
+          flex-shrink: 0;
+        }
+
+        .event-chat-v2 .icon-btn {
+          width: 32px; height: 32px;
+          border-radius: 8px;
+          border: none;
+          background: transparent;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          color: var(--muted);
+          transition: all .15s;
+        }
+
+        .event-chat-v2 .icon-btn:hover {
+          background: var(--indigo-light);
+          color: var(--indigo);
+        }
+
+        .event-chat-v2 .msg-input {
+          flex: 1;
+          border: none;
+          background: transparent;
+          font-family: inherit;
+          font-size: 14px;
+          color: var(--text);
+          outline: none;
+          resize: none;
+          max-height: 120px;
+          line-height: 1.5;
+        }
+
+        .event-chat-v2 .msg-input::placeholder { color: #9CA3AF; }
+
+        .event-chat-v2 .send-btn {
+          width: 38px; height: 38px;
+          border-radius: 10px;
+          border: none;
+          background: var(--indigo);
+          color: white;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          flex-shrink: 0;
+          transition: all .2s;
+          box-shadow: 0 2px 8px rgba(79,70,229,.35);
+        }
+
+        .event-chat-v2 .send-btn:hover:not(:disabled) {
+          background: var(--indigo-dark);
+          transform: scale(1.05);
+          box-shadow: 0 4px 12px rgba(79,70,229,.4);
+        }
+
+        .event-chat-v2 .send-btn:active:not(:disabled) { transform: scale(.97); }
+        .event-chat-v2 .send-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* PEOPLE SIDEBAR */
+        .event-chat-v2 .people-panel {
+          width: 260px;
+          flex-shrink: 0;
+          background: var(--white);
+          border-left: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          overflow: hidden;
+          max-width: 0;
+          border-left-width: 0;
+          transition: max-width .3s cubic-bezier(.4,0,.2,1) !important, border-left-width .3s;
+        }
+
+        .event-chat-v2 .people-panel.open {
+          max-width: 260px;
+          border-left-width: 1px;
+        }
+
+        @media (max-width: 768px) {
+          .event-chat-v2 .people-panel {
+            position: absolute;
+            top: 72px; /* Height of the header */
+            right: 0;
+            bottom: 0;
+            z-index: 50;
+            background: var(--surface);
+          }
+          
+          /* Full width on very small screens if toggled */
+          .event-chat-v2 .people-panel.open {
+             max-width: 100%;
+             width: 100%;
+             border-left-width: 0;
+          }
+        }
+
+        .event-chat-v2 .people-header {
+          padding: 16px 20px 12px;
+          border-bottom: 1px solid var(--border);
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: .08em;
+          text-transform: uppercase;
+          color: var(--muted);
+        }
+
+        .event-chat-v2 .people-list {
+          flex: 1;
+          overflow-y: auto;
+          overflow-x: hidden;
+          padding: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+
+        .event-chat-v2 .people-list::-webkit-scrollbar { width: 3px; }
+        .event-chat-v2 .people-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+        .event-chat-v2 .person-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 10px;
+          border-radius: 10px;
+          cursor: pointer;
+          transition: background .15s;
+        }
+
+        .event-chat-v2 .person-row:hover { background: var(--indigo-light); }
+
+        .event-chat-v2 .person-avatar {
+          width: 32px; height: 32px;
+          border-radius: 9px;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 12px;
+          font-weight: 700;
+          color: white;
+          flex-shrink: 0;
+          position: relative;
+        }
+
+        .event-chat-v2 .person-online-dot {
+          position: absolute;
+          bottom: -1px; right: -1px;
+          width: 9px; height: 9px;
+          border-radius: 50%;
+          background: var(--online);
+          border: 2px solid var(--white);
+        }
+
+        .event-chat-v2 .person-name {
+          font-size: 13px;
+          font-weight: 500;
+          color: var(--text);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .event-chat-v2 .live-dot {
+          width: 7px; height: 7px;
+          border-radius: 50%;
+          background: var(--online);
+          box-shadow: 0 0 0 2px rgba(34,197,94,.25);
+          animation: pulse 2s infinite;
+        }
+
+        .event-chat-v2 .live-dot.offline {
+           animation: none !important;
+        }
+
+        @keyframes pulse {
+          0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+          50% { box-shadow: 0 0 0 5px rgba(34,197,94,.08); }
+        }
       `}</style>
     </div>
   )

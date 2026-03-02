@@ -18,7 +18,7 @@ import { AgendaWidget } from "../components/widgets/AgendaWidget";
 import { RecentActivityWidget } from "../components/widgets/RecentActivityWidget";
 
 export default function StudentDashboard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
@@ -132,7 +132,7 @@ export default function StudentDashboard() {
                       {event.category}
                     </span>
                     <h4 className="font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">
-                      {typeof event.title === 'object' ? (event.title.en || Object.values(event.title)[0]) : event.title}
+                      {typeof event.title === 'object' ? (event.title[i18n.language] || event.title.en || Object.values(event.title)[0]) : event.title}
                     </h4>
                     <p className="text-xs text-gray-500 truncate mt-1">
                       {event.venue}

@@ -1,18 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const ChatMessage = require("../models/ChatMessage");
-const jwt = require("jsonwebtoken");
-
-const authMiddleware = (req, res, next) => {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
-  try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
-    next();
-  } catch {
-    return res.status(401).json({ error: "Invalid token" });
-  }
-};
+const User = require("../models/User");
+const authMiddleware = require("../middleware/auth.middleware");
 
 // GET /api/chat/:eventId — fetch last 100 messages
 router.get("/:eventId", async (req, res) => {
@@ -22,6 +12,7 @@ router.get("/:eventId", async (req, res) => {
       .limit(100);
     res.json(messages);
   } catch (err) {
+    console.error("Error fetching chat messages:", err);
     res.status(500).json({ error: "Failed to fetch messages" });
   }
 });
@@ -32,11 +23,20 @@ router.post("/:eventId", authMiddleware, async (req, res) => {
   if (!text || !text.trim()) return res.status(400).json({ error: "Message cannot be empty" });
 
   try {
+    // If name is missing from JWT, fetch it from DB
+    let name = req.user.name || req.user.email;
+    if (!name && req.user.id) {
+      const user = await User.findById(req.user.id);
+      if (user) {
+        name = user.name || user.email;
+      }
+    }
+
     const message = await ChatMessage.create({
       eventId: req.params.eventId,
       senderId: req.user.id,
-      senderName: req.user.name || req.user.email,
-      senderRole: req.user.role,
+      senderName: name || "Anonymous User",
+      senderRole: req.user.role || "student",
       text: text.trim(),
     });
 
@@ -47,7 +47,8 @@ router.post("/:eventId", authMiddleware, async (req, res) => {
 
     res.status(201).json(message);
   } catch (err) {
-    res.status(500).json({ error: "Failed to send message" });
+    console.error("Chat message creation error:", err);
+    res.status(500).json({ error: "Failed to send message", details: err.message });
   }
 });
 

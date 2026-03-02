@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ArrowLeft, Users, Calendar, MapPin, Clock, ShieldCheck, Mail, GraduationCap, Hash, Download } from "lucide-react";
 
 export default function OrganizerEventDetail() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { id } = useParams();
   const navigate = useNavigate();
   const [event, setEvent] = useState(null);
@@ -49,6 +49,8 @@ export default function OrganizerEventDetail() {
     </div>
   );
 
+  const getTitle = (tObj) => typeof tObj === 'object' ? (tObj[i18n.language] || tObj.en || Object.values(tObj)[0]) : tObj
+
   const registeredCount = students.length;
   const totalSeats = event.totalSeats || 100;
   const progress = Math.min(100, (registeredCount / totalSeats) * 100);
@@ -65,7 +67,7 @@ export default function OrganizerEventDetail() {
         </button>
          <div>
             <h1 className="text-3xl font-black text-gray-900 leading-tight">
-               {event.title}
+               {getTitle(event.title)}
             </h1>
             <div className="flex items-center gap-3 mt-1">
                <span className="text-[10px] font-black text-indigo-600 uppercase tracking-[0.2em] bg-indigo-50 px-2 py-0.5 rounded-md">

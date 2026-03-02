@@ -54,7 +54,7 @@ export default function StudentLayout() {
       />
 
       {/* Right Section Wrapper */}
-      <div className="flex-1 flex flex-col gap-0 md:gap-4 min-w-0 pb-16 md:pb-0">
+      <div className={`flex-1 flex flex-col gap-0 md:gap-4 min-w-0 ${isFullBleed ? 'pb-0' : 'pb-16 md:pb-0'}`}>
         {/* Header - Floating Top */}
         <PortalHeader unreadNotifications={unreadCount} />
 
@@ -62,7 +62,7 @@ export default function StudentLayout() {
         <main
           className={`flex-1 bg-white md:rounded-[20px] shadow-sm border-t md:border border-gray-100/50 ${
             isFullBleed
-              ? "p-0 overflow-hidden"
+              ? "p-0 overflow-y-auto"
               : "p-4 md:p-6 overflow-y-auto"
           }`}
         >
