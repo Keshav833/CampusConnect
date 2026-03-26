@@ -166,4 +166,4 @@ This project is built for educational and hackathon purposes.
 
 ---
 
-\_Built with ❤️ for Campus Communities.\_
+Built by [Keshav Chauhan](https://keshavchauhan.in)
